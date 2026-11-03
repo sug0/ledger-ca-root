@@ -73,7 +73,7 @@ jobs:
           python -m venv "$HOME/venv-ledger"
           "$HOME/venv-ledger/bin/pip" install ledgerblue
           python -m venv "$HOME/venv-speculos"
-          "$HOME/venv-speculos/bin/pip" install speculos pycryptodomex pytest
+          "$HOME/venv-speculos/bin/pip" install speculos pycryptodome pytest
 
       - name: Build
         run: make SYSROOT=/usr/lib/picolibc/arm-none-eabi ${{ matrix.variant }}

@@ -29,7 +29,7 @@ The test needs the application built and a python venv with speculos:
 
 ```sh
 python3 -m venv ~/.venvs/speculos
-~/.venvs/speculos/bin/pip install speculos pycryptodomex pytest
+~/.venvs/speculos/bin/pip install speculos pycryptodome pytest
 ```
 
 For the device backend, `pip install ledgerblue` as well (see below).
