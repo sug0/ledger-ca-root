@@ -3,14 +3,15 @@ End-to-end test: issue an intermediate CA certificate with the device.
 
 The host generates an intermediate CA key pair, builds the TBSCertificate of
 the intermediate certificate, and has the application (the CA root) sign the
-exact TBS bytes over the speculos review flow. The signature is returned,
-the certificate is assembled, and the chain root -> intermediate is verified
+exact TBS bytes over the on-device review. The signature is returned, the
+certificate is assembled, and the chain root -> intermediate is verified
 cryptographically on the host.
 """
 
 import os
 
 from application_client import x509
+from conftest import console
 
 APP_NAMES = {"ed25519": b"CA Root Ed25519", "p256": b"CA Root P256"}
 VERSION = bytes((1, 0, 0))
@@ -30,7 +31,7 @@ NOT_BEFORE = b"260101000000Z"
 NOT_AFTER = b"360101000000Z"
 
 
-def test_intermediate_certificate_chain(client, sender, variant):
+def test_intermediate_certificate_chain(client, sender, variant, backend, review_approve):
     # --- the application is up and answers the basic commands
     assert sender.get_version() == VERSION
     assert sender.get_app_name() == APP_NAMES[variant]
@@ -39,8 +40,10 @@ def test_intermediate_certificate_chain(client, sender, variant):
     root_pub = sender.get_ca_public_key()
     if variant == "ed25519":
         assert len(root_pub) == 32
-        # fixed path m/8888'/0' over the speculos seed
-        assert root_pub == x509.ed25519_root_pubkey_from_seed()
+        if backend == "speculos":
+            # fixed path m/8888'/0' over the speculos seed; a real device
+            # seed is unknown, the chain check below covers the trust
+            assert root_pub == x509.ed25519_root_pubkey_from_seed()
     else:
         assert len(root_pub) == 65 and root_pub[0] == 0x04
         x509.p256_point_from_raw(root_pub)  # raises if not a curve point
@@ -59,8 +62,15 @@ def test_intermediate_certificate_chain(client, sender, variant):
     )
     assert len(tbs) > 240, "expected a multi-chunk TBS"
 
+    if backend == "device":
+        console(
+            f">>> expected on the device: Subject '{SUBJECT_CN.decode()}',"
+            f" Serial '0x{serial.hex()}',"
+            f" Valid '{NOT_BEFORE.decode()} - {NOT_AFTER.decode()}'"
+        )
+
     # --- sign on the device over the exact TBS bytes
-    signature = sender.sign_tbs(tbs, on_review=lambda: review_approve(client))
+    signature = sender.sign_tbs(tbs, on_review=review_approve)
     if variant == "ed25519":
         assert len(signature) == 64
     else:

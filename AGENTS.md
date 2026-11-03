@@ -45,9 +45,11 @@ self-contained and portable (Linux + macOS).
 - Unit tests: cmake project in `unit-tests/` — configure
   `cmake -S unit-tests -B unit-tests/build`, run `ctest --test-dir
   unit-tests/build`.
-- End-to-end: one full issuance-flow test against speculos (`make test`,
-  both variants on CI); needs a speculos venv (`SPECULOS_VENV` in
-  `mkconfig`) and Linux for `qemu-arm-static`, see `tests/README.md`.
+- End-to-end: one full issuance-flow test (`make test BACKEND=speculos`
+  against the emulator — the backend is always explicit — or `BACKEND=device`
+  against a real device over USB); both variants on CI; needs a test venv
+  (`SPECULOS_VENV` in `mkconfig`) and Linux for `qemu-arm-static`, see
+  `tests/README.md`.
 - `.github/workflows/ci.yml` runs both suites on ubuntu-latest.
 
 ## Conventions

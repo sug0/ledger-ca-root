@@ -112,9 +112,10 @@ macOS use the speculos Docker image
 - Unit tests (C, cmake + Unity): configure with
   `cmake -S unit-tests -B unit-tests/build`, run with
   `ctest --test-dir unit-tests/build`.
-- End-to-end test against speculos (certificate issuance flow, both
-  variants): `make test`, see `tests/README.md` for the venv setup
-  (`SPECULOS_VENV` in `mkconfig`).
+- End-to-end test (certificate issuance flow, both variants): the backend
+  is always explicit — `make test BACKEND=speculos` against the emulator
+  (CI), or `make test BACKEND=device` against a real device over USB. See
+  `tests/README.md` for the venv setup (`SPECULOS_VENV` in `mkconfig`).
 - CI (`.github/workflows/ci.yml`) runs both suites on GitHub-hosted runners.
 
 ## Documentation

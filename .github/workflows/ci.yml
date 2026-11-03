@@ -83,7 +83,7 @@ jobs:
         run: make ${{ matrix.variant }}
 
       - name: Run e2e test
-        run: make test CA_VARIANT=${{ matrix.variant }}
+        run: make test CA_VARIANT=${{ matrix.variant }} BACKEND=speculos
 
       - name: Upload screenshots on failure
         if: failure()
