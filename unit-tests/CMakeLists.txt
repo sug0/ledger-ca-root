@@ -35,6 +35,7 @@ set(UT_INCLUDE_DIRS
 set(UT_COMPILE_DEFS
     APPNAME="Boilerplate"
     APPVERSION="9.9.9"
+    USE_ED25519
 )
 
 #######################################################################

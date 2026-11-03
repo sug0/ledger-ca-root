@@ -1,5 +1,6 @@
 ---
 BasedOnStyle: Google
+IndentCaseLabels: false
 IndentWidth: 4
 Language: Cpp
 ColumnLimit: 100

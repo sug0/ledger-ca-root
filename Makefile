@@ -51,18 +51,48 @@ endif
 # Device to build for by default; override on the command line (make TARGET=stax)
 TARGET ?= nanos2
 
+# NB: LDFLAGS/CFLAGS from the calling environment (e.g. Homebrew's native
+# build hints) survive the SDK makefiles' MAKEFLAGS re-exec with the SDK's
+# own link flags already appended and get them appended a second time,
+# corrupting the link; ambient flag variables are not part of this build
+LDFLAGS :=
+CFLAGS :=
+unexport LDFLAGS CFLAGS
+
+# Curve variant of the CA key: each variant builds as its own app with a
+# distinct name, so both can coexist on the device. Override on the command
+# line (make CA_VARIANT=p256) or use the ed25519/p256 wrapper targets.
+CA_VARIANT ?= ed25519
+
+ifeq ($(filter $(CA_VARIANT),ed25519 p256),)
+$(error CA_VARIANT must be ed25519 or p256, found '$(CA_VARIANT)')
+endif
+
+# Separate build tree per variant; the override also beats the SDK's own
+# BUILD_DIR assignment below, so every derived directory follows it
+override BUILD_DIR = build/$(CA_VARIANT)
+
 include $(BOLOS_SDK)/Makefile.target
 
 ########################################
 #        Mandatory configuration       #
 ########################################
-# Application name
-APPNAME = "Boilerplate"
+# Application name and curve, per variant. The USE_* define switches the
+# curve-specific code paths at compile time.
+ifeq ($(CA_VARIANT),ed25519)
+DEFINES += USE_ED25519
+APPNAME = "CA Root Ed25519"
+CURVE_APP_LOAD_PARAMS = ed25519
+else
+DEFINES += USE_P256
+APPNAME = "CA Root P256"
+CURVE_APP_LOAD_PARAMS = secp256r1
+endif
 
 # Application version
-APPVERSION_M = 2
-APPVERSION_N = 3
-APPVERSION_P = 2
+APPVERSION_M = 1
+APPVERSION_N = 0
+APPVERSION_P = 0
 APPVERSION = "$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)"
 
 # Application source files
@@ -85,28 +115,19 @@ ifeq ($(TARGET_NAME),$(filter $(TARGET_NAME),TARGET_NANOX TARGET_NANOS2))
 endif
 
 # Application allowed derivation curves.
-# Possibles curves are: secp256k1, secp256r1, ed25519 and bls12381g1
-# If your app needs it, you can specify multiple curves by using:
-# `CURVE_APP_LOAD_PARAMS = <curve1> <curve2>`
-CURVE_APP_LOAD_PARAMS = secp256k1
+# Possible curves are: secp256k1, secp256r1, ed25519 and bls12381g1
+# Set per variant above, matching the CA key derivation.
 
 # Application allowed derivation paths.
-# You should request a specific path for your app.
-# This serve as an isolation mechanism.
-# Most application will have to request a path according to the BIP-0044
-# and SLIP-0044 standards.
-# If your app needs it, you can specify multiple path by using:
-# `PATH_APP_LOAD_PARAMS = "44'/1'" "45'/1'"`
-PATH_APP_LOAD_PARAMS = "44'/1'"   # purpose=coin(44) / coin_type=Testnet(1)
+# The CA key lives at m/8888'/0' (SLIP-0010 ed25519 / BIP32 P-256).
+PATH_APP_LOAD_PARAMS = "8888'/0'"
 
 # Setting to allow building variant applications
 # - <VARIANT_PARAM> is the name of the parameter which should be set
 #   to specify the variant that should be build.
 # - <VARIANT_VALUES> a list of variant that can be build using this app code.
-#   * It must at least contains one value.
-#   * Values can be the app ticker or anything else but should be unique.
-VARIANT_PARAM = COIN
-VARIANT_VALUES = BOL
+VARIANT_PARAM = CA_VARIANT
+VARIANT_VALUES = ed25519 p256
 
 # Enabling DEBUG flag will enable PRINTF for speculos
 #DEBUG = 1
@@ -195,3 +216,28 @@ LDLIBS += -lgcc
 # ledgerblue (>= 0.1.58) rejects; here it regenerates the root bin/app.apdu
 load-offline: all
 	python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS) --offline bin/app.apdu
+
+########################################
+#            Variant targets           #
+########################################
+# Plain make builds both variants; an explicit CA_VARIANT=... on the command
+# line targets just that one.
+ifeq ($(origin CA_VARIANT),command line)
+.DEFAULT_GOAL := all
+else
+.DEFAULT_GOAL := both
+endif
+
+both: ed25519 p256
+
+ed25519:
+	+$(MAKE) CA_VARIANT=ed25519
+
+p256:
+	+$(MAKE) CA_VARIANT=p256
+
+# Full cleanup across variants: the SDK's clean only removes $(BUILD_DIR)
+cleanall:
+	rm -fr build bin debug
+
+.PHONY: both ed25519 p256 cleanall
