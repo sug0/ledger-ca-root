@@ -1,6 +1,6 @@
 /*****************************************************************************
  *   Ledger CA Root Application
- *   (c) 2026
+ *   (c) 2026 Tiago Carvalho
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -80,6 +80,8 @@ static bool copy_public_key(uint8_t *out, const cx_ecfp_public_key_t *pubkey) {
     if (pubkey->W_len != 1 + 2 * CA_PUBLIC_KEY_LEN || pubkey->W[0] != 0x04) {
         return false;
     }
+    // SAFETY: W_len was checked to be 1 + 2 * CA_PUBLIC_KEY_LEN, so the
+    // byte-reversed read of Y stays inside W
     for (size_t i = 0; i < CA_PUBLIC_KEY_LEN; i++) {
         out[i] = pubkey->W[1 + 2 * CA_PUBLIC_KEY_LEN - 1 - i];
     }
@@ -172,8 +174,9 @@ ca_key_error_t ca_sign(const uint8_t *tbs,
                                      sizeof(digest));
         }
         if (error == CX_OK) {
-            // *sig_len carries the signature buffer capacity in and receives
-            // the actual DER length out; the syscall rejects a smaller capacity
+            // NB: *sig_len carries the signature buffer capacity in and
+            // receives the actual DER length out; the syscall rejects a
+            // smaller capacity
             *sig_len = CA_SIGNATURE_MAX_LEN;
             error = cx_ecdsa_sign_no_throw(&privkey,
                                            CX_RND_RFC6979,

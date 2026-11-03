@@ -1,6 +1,6 @@
 /*****************************************************************************
  *   Ledger CA Root Application
- *   (c) 2026
+ *   (c) 2026 Tiago Carvalho
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -212,6 +212,8 @@ bool tbs_format_date(const uint8_t *time, size_t len, char out[11]) {
     }
 
     const char *month_day = src + year_digits;
+    // SAFETY: the length and digit checks above pin the layout down, so
+    // month_day addresses exactly MMDD and out holds YYYY-MM-DD plus NUL
     out[0] = (char) ('0' + year / 1000 % 10);
     out[1] = (char) ('0' + year / 100 % 10);
     out[2] = (char) ('0' + year / 10 % 10);

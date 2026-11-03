@@ -1,6 +1,6 @@
 /*****************************************************************************
  *   Ledger CA Root Application
- *   (c) 2026
+ *   (c) 2026 Tiago Carvalho
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ void app_quit(void) {
 //  -----------------------------------------------------------
 #define SETTING_INFO_NB 2
 static const char *const INFO_TYPES[SETTING_INFO_NB] = {"Version", "Developer"};
-static const char *const INFO_CONTENTS[SETTING_INFO_NB] = {APPVERSION, "Ledger"};
+static const char *const INFO_CONTENTS[SETTING_INFO_NB] = {APPVERSION, "Tiago Carvalho"};
 
 static const nbgl_contentInfoList_t infoList = {
     .nbInfos = SETTING_INFO_NB,
