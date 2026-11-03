@@ -9,7 +9,7 @@ bin/
 debug/
 
 # Nano NBGL reversed icon for Home Screen
-glyphs/home_boilerplate_14px.gif
+glyphs/home_ca_root_14px.gif
 
 # End-to-end test artifacts
 tests/screenshots/

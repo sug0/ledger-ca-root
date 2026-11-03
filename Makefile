@@ -1,6 +1,6 @@
 # ****************************************************************************
-#    Ledger App Boilerplate
-#    (c) 2023 Ledger SAS.
+#    CA Root — Ledger certificate authority application.
+#    (c) 2026 Ledger SAS.
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -100,18 +100,18 @@ APP_SOURCE_PATH += src
 
 # Application icons following guidelines:
 # https://developers.ledger.com/docs/embedded-app/design-requirements/#device-icon
-ICON_NANOX = icons/app_boilerplate_14px.gif
-ICON_NANOSP = icons/app_boilerplate_14px.gif
-ICON_STAX = icons/app_boilerplate_32px.gif
-ICON_FLEX = icons/app_boilerplate_40px.gif
-ICON_APEX_P = icons/app_boilerplate_32px_apex.png
+ICON_NANOX = icons/app_ca_root_14px.gif
+ICON_NANOSP = icons/app_ca_root_14px.gif
+ICON_STAX = icons/app_ca_root_32px.gif
+ICON_FLEX = icons/app_ca_root_40px.gif
+ICON_APEX_P = icons/app_ca_root_32px_apex.png
 
 ifeq ($(TARGET_NAME),$(filter $(TARGET_NAME),TARGET_NANOX TARGET_NANOS2))
     # With the Nano NBGL Design, the Home Screen icon is the reverse of the App icon:
     # It should be on white background, with rounded corners.
     # This definition allows SDK Makefiles to automatically generate it based on the App icon.
     # Please note that the icon is dynamically generated, and declared in the .gitignore to avoid storing it.
-    ICON_HOME_NANO = glyphs/home_boilerplate_14px.gif
+    ICON_HOME_NANO = glyphs/home_ca_root_14px.gif
 endif
 
 # Application allowed derivation curves.

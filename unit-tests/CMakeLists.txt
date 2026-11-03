@@ -30,7 +30,7 @@ set(UT_INCLUDE_DIRS
 )
 
 set(UT_COMPILE_DEFS
-    APPNAME="Boilerplate"
+    APPNAME="CA Root"
     APPVERSION="9.9.9"
     USE_ED25519
 )

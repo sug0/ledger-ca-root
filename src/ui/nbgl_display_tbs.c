@@ -72,7 +72,7 @@ int ui_display_tbs(void) {
 
     nbgl_useCaseReview(TYPE_MESSAGE,
                        &pairList,
-                       &ICON_APP_BOILERPLATE,
+                       &ICON_APP_CA_ROOT,
                        "Review certificate\nto sign",
                        NULL,
                        NULL,
