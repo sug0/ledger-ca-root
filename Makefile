@@ -119,8 +119,12 @@ endif
 # Set per variant above, matching the CA key derivation.
 
 # Application allowed derivation paths.
-# The CA key lives at m/8888'/0' (SLIP-0010 ed25519 / BIP32 P-256).
-PATH_APP_LOAD_PARAMS = "8888'/0'"
+# The CA key lives at m/8888'/0' (SLIP-0010 ed25519 / BIP32 P-256). The
+# registry holds the beginning of the authorized path, and the OS grants
+# derivations that extend it; production apps always derive strictly deeper
+# than their registered entry (e.g. Solana registers 44'/501' and derives
+# 44'/501'/0'/0'), so the prefix is registered rather than the exact path.
+PATH_APP_LOAD_PARAMS = "8888'"
 
 # Setting to allow building variant applications
 # - <VARIANT_PARAM> is the name of the parameter which should be set
@@ -141,11 +145,7 @@ VARIANT_VALUES = ed25519 p256
 #     Application custom permissions   #
 ########################################
 # See SDK `include/appflags.h` for the purpose of each permission
-# The CA key derives from the device seed at m/8888'/0', a master-seed
-# operation the OS only grants to apps installed with this flag (speculos
-# does not enforce it); installing an app with custom permissions needs a
-# developer root key on the device
-HAVE_APPLICATION_FLAG_DERIVE_MASTER = 1
+#HAVE_APPLICATION_FLAG_DERIVE_MASTER = 1
 #HAVE_APPLICATION_FLAG_GLOBAL_PIN = 1
 #HAVE_APPLICATION_FLAG_BOLOS_SETTINGS = 1
 #HAVE_APPLICATION_FLAG_LIBRARY = 1
