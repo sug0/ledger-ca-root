@@ -172,6 +172,9 @@ ca_key_error_t ca_sign(const uint8_t *tbs,
                                      sizeof(digest));
         }
         if (error == CX_OK) {
+            // *sig_len carries the signature buffer capacity in and receives
+            // the actual DER length out; the syscall rejects a smaller capacity
+            *sig_len = CA_SIGNATURE_MAX_LEN;
             error = cx_ecdsa_sign_no_throw(&privkey,
                                            CX_RND_RFC6979,
                                            CX_SHA256,
