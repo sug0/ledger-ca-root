@@ -48,7 +48,10 @@ jobs:
       - name: Install toolchain
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang lld llvm qemu-user-static
+          # picolibc ships the arm-none-eabi libc headers clang compiles against;
+          # Ubuntu keeps them under /usr/lib/picolibc (no newlib headers), so the
+          # sysroot is passed to make explicitly below
+          sudo apt-get install -y clang lld llvm picolibc-arm-none-eabi qemu-user-static
 
       - name: Checkout SDK
         run: |
@@ -73,10 +76,10 @@ jobs:
           "$HOME/venv-speculos/bin/pip" install speculos pycryptodomex pytest
 
       - name: Build
-        run: make ${{ matrix.variant }}
+        run: make SYSROOT=/usr/lib/picolibc/arm-none-eabi ${{ matrix.variant }}
 
       - name: Run e2e test
-        run: make test CA_VARIANT=${{ matrix.variant }} BACKEND=speculos
+        run: make test SYSROOT=/usr/lib/picolibc/arm-none-eabi CA_VARIANT=${{ matrix.variant }} BACKEND=speculos
 
       - name: Upload screenshots on failure
         if: failure()
