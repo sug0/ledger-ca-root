@@ -1,6 +1,6 @@
 /*****************************************************************************
  *   Ledger CA Root Application
- *   (c) 2026
+ *   (c) 2026 Tiago Carvalho
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -31,15 +31,15 @@ void validate_tbs(bool choice) {
         return;
     }
 
-    G_context.state = STATE_APPROVED;
     uint16_t err_code = 0;
     ca_key_error_t stage = ca_sign(G_context.tbs.tbs,
                                    G_context.tbs.tbs_len,
                                    G_context.tbs.signature,
                                    &G_context.tbs.signature_len,
                                    &err_code);
+    // the flow is over either way; the context must accept a new one
+    G_context.state = STATE_NONE;
     if (stage != CA_KEY_OK) {
-        G_context.state = STATE_NONE;
         helper_send_ca_key_error(stage, err_code);
         return;
     }

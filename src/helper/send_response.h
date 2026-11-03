@@ -7,13 +7,15 @@
 /**
  * Helper to send APDU response with the raw CA public key.
  *
- * response = G_context.pk_info.raw_public_key length (1) ||
- *            G_context.pk_info.raw_public_key
+ * response = raw_public_key length (1) ||
+ *            raw_public_key
+ *
+ * @param[in] raw_public_key raw CA public key, CA_PUBLIC_KEY_LEN bytes
  *
  * @return zero or positive integer if success, -1 otherwise.
  *
  */
-int helper_send_response_pubkey(void);
+int helper_send_response_pubkey(const uint8_t *raw_public_key);
 
 /**
  * Helper to send APDU response with the TBSCertificate signature.

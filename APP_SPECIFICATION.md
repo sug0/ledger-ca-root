@@ -100,7 +100,8 @@ on the device, and returns the signature over the exact bytes received.
 
 **P1 - Chunk index:**
 
-- `0x00`: first chunk, resets any flow in progress
+- `0x00`: first chunk, resets any flow in progress (rejected with
+  `SWO_CONDITIONS_NOT_SATISFIED` while a review is pending)
 - `0x01`, `0x02`, ...: subsequent chunks, must arrive in strict sequence
 
 **P2 - More chunks flag:**
@@ -153,7 +154,7 @@ reject rather than a truncated display.
 | 66A2 | SWO_CA_KEY_PAIR              | CA public key computation failed                   |
 | 66A3 | SWO_CA_KEY_SIGN              | Signature computation failed                       |
 | 66A4 | SWO_CA_KEY_LEN               | CA public key has an unexpected length             |
-| 6985 | SWO_CONDITIONS_NOT_SATISFIED | Rejected by user, or a signing flow is in progress |
+| 6985 | SWO_CONDITIONS_NOT_SATISFIED | Rejected by user, or a SIGN TBS while a review is pending |
 | 6A80 | SWO_INCORRECT_DATA           | Malformed TBSCertificate or out-of-sequence chunk  |
 | 6A86 | SWO_INCORRECT_P1_P2          | Either P1 or P2 is incorrect                       |
 | 6A87 | SWO_WRONG_DATA_LENGTH        | TBS exceeds 1024 bytes, or unexpected command data |

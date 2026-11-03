@@ -21,9 +21,8 @@ typedef enum {
  * Enumeration with parsing state.
  */
 typedef enum {
-    STATE_NONE,     /// no flow in progress
-    STATE_PARSED,   /// TBSCertificate received and parsed, awaiting approval
-    STATE_APPROVED  /// TBSCertificate approved and signed
+    STATE_NONE,   /// no flow in progress
+    STATE_PARSED  /// TBSCertificate received and parsed, awaiting approval
 } state_e;
 
 /**
@@ -32,13 +31,6 @@ typedef enum {
 typedef enum {
     CONFIRM_TBS  /// confirm and sign a TBSCertificate
 } request_type_e;
-
-/**
- * Structure for public key context information.
- */
-typedef struct {
-    uint8_t raw_public_key[CA_PUBLIC_KEY_LEN];  /// raw CA public key
-} pubkey_ctx_t;
 
 /**
  * Structure for TBSCertificate signing context: the received DER bytes plus
@@ -61,8 +53,5 @@ typedef struct {
 typedef struct {
     state_e state;            /// state of the context
     request_type_e req_type;  /// user request
-    union {
-        pubkey_ctx_t pk_info;  /// public key export context
-        sign_tbs_ctx_t tbs;    /// TBSCertificate signing context
-    };
+    sign_tbs_ctx_t tbs;       /// TBSCertificate signing context
 } global_ctx_t;

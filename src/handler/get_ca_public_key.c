@@ -1,6 +1,6 @@
 /*****************************************************************************
  *   Ledger CA Root Application
- *   (c) 2026
+ *   (c) 2026 Tiago Carvalho
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,14 +19,16 @@
 
 #include "get_ca_public_key.h"
 #include "ca_key.h"
-#include "globals.h"
 #include "send_response.h"
 
 int handler_get_ca_public_key(void) {
+    // the key lives on the stack: it must never share storage with the
+    // signing context, which a concurrent TBS flow accumulates into
+    uint8_t raw_public_key[CA_PUBLIC_KEY_LEN];
     uint16_t err_code = 0;
-    ca_key_error_t stage = ca_get_public_key(G_context.pk_info.raw_public_key, &err_code);
+    ca_key_error_t stage = ca_get_public_key(raw_public_key, &err_code);
     if (stage != CA_KEY_OK) {
         return helper_send_ca_key_error(stage, err_code);
     }
-    return helper_send_response_pubkey();
+    return helper_send_response_pubkey(raw_public_key);
 }

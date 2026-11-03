@@ -1,6 +1,6 @@
 /*****************************************************************************
  *   Ledger CA Root Application
- *   (c) 2026
+ *   (c) 2026 Tiago Carvalho
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -43,6 +43,8 @@ static uint16_t format_review_fields(void) {
 
     // subject CommonName is optional
     if (info.subject_cn != NULL) {
+        // SAFETY: tbs_parse rejects a CommonName over TBS_CN_MAX_LEN, so the
+        // copy cannot overflow the buffer that limit sizes
         memcpy(G_context.tbs.subject_cn, info.subject_cn, info.subject_cn_len);
         G_context.tbs.subject_cn[info.subject_cn_len] = '\0';
     }
@@ -80,7 +82,9 @@ static uint16_t format_review_fields(void) {
 }
 
 int handler_sign_tbs(buffer_t *cdata, uint8_t chunk, bool more) {
-    if (G_context.state != STATE_NONE && G_context.state != STATE_PARSED) {
+    if (G_context.state == STATE_PARSED) {
+        // a review is pending; a restart would wipe the context the review
+        // screen is reading its fields from
         return io_send_sw(SWO_CONDITIONS_NOT_SATISFIED);
     }
 
