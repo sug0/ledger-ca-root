@@ -16,11 +16,6 @@ unit-tests/build/
 unit-tests/coverage/
 unit-tests/coverage.info
 
-# Fuzzing
-fuzzing/build/
-fuzzing/corpus/
-fuzzing/out/
-
 # Python
 *.pyc[cod]
 *.egg
