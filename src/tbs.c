@@ -63,19 +63,19 @@ static bool name_get_cn(const uint8_t *value, size_t length, tbs_info_t *info) {
                 return false;
             }
             switch (attr.tag) {
-                case DER_TAG_UTF8_STRING:
-                case DER_TAG_PRINTABLE_STRING:
-                case DER_TAG_T61_STRING:
-                case DER_TAG_IA5_STRING:
-                    if (attr.length > TBS_CN_MAX_LEN) {
-                        return false;
-                    }
-                    info->subject_cn = attr.value;
-                    info->subject_cn_len = attr.length;
-                    return true;
-                default:
-                    // unsupported string type for the CommonName
+            case DER_TAG_UTF8_STRING:
+            case DER_TAG_PRINTABLE_STRING:
+            case DER_TAG_T61_STRING:
+            case DER_TAG_IA5_STRING:
+                if (attr.length > TBS_CN_MAX_LEN) {
                     return false;
+                }
+                info->subject_cn = attr.value;
+                info->subject_cn_len = attr.length;
+                return true;
+            default:
+                // unsupported string type for the CommonName
+                return false;
             }
         }
     }

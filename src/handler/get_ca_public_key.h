@@ -1,6 +1,6 @@
 /*****************************************************************************
- *   Ledger App Boilerplate.
- *   (c) 2020 Ledger SAS.
+ *   Ledger CA Root Application
+ *   (c) 2026
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,33 +15,11 @@
  *  limitations under the License.
  *****************************************************************************/
 
-#include <stdint.h>   // uint*_t
-#include <stddef.h>   // size_t
-#include <stdbool.h>  // bool
-#include <string.h>   // memmove
+#pragma once
 
-#include "os.h"
-#include "cx.h"
-#include "ledger_assert.h"
-
-#include "address.h"
-
-#include "tx_types.h"
-
-bool address_from_pubkey(const uint8_t public_key[static 65], uint8_t *out, size_t out_len) {
-    uint8_t address[32] = {0};
-
-    LEDGER_ASSERT(out != NULL, "NULL out");
-
-    if (out_len < ADDRESS_LEN) {
-        return false;
-    }
-
-    if (cx_keccak_256_hash(public_key + 1, 64, address) != CX_OK) {
-        return false;
-    }
-
-    memmove(out, address + sizeof(address) - ADDRESS_LEN, ADDRESS_LEN);
-
-    return true;
-}
+/**
+ * Derive the CA public key from the device seed and send it.
+ *
+ * @return zero or positive integer if success, -1 otherwise.
+ */
+int handler_get_ca_public_key(void);

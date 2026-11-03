@@ -1,5 +1,5 @@
 /*
- * Unit tests for src/helper/send_reponse.c.
+ * Unit tests for src/helper/send_response.c.
  *
  * helper_send_response_pubkey() / _sig() serialise data from G_context into a
  * response buffer and send it. They call io_send_response_pointer(), a
@@ -59,15 +59,12 @@ void tearDown(void) {
 
 // =========================================================================
 // helper_send_response_pubkey
-//   resp = PUBKEY_LEN | raw_public_key | CHAINCODE_LEN | chain_code
+//   resp = CA_PUBLIC_KEY_LEN | raw_public_key
 // =========================================================================
 
 void test_send_response_pubkey(void) {
-    for (size_t i = 0; i < PUBKEY_LEN; i++) {
-        G_context.pk_info.raw_public_key[i] = (uint8_t) (0x10 + i);
-    }
-    for (size_t i = 0; i < CHAINCODE_LEN; i++) {
-        G_context.pk_info.chain_code[i] = (uint8_t) (0xA0 + i);
+    for (size_t i = 0; i < CA_PUBLIC_KEY_LEN; i++) {
+        G_context.pk_info.raw_public_key[i] = (uint8_t) (i + 1);
     }
 
     io_send_response_buffers_AddCallback(send_cb);
@@ -78,27 +75,20 @@ void test_send_response_pubkey(void) {
     TEST_ASSERT_EQUAL(SEND_RET, ret);
     TEST_ASSERT_EQUAL(1, g_count);
     TEST_ASSERT_EQUAL_HEX16(SWO_SUCCESS, g_sw);
-
-    // Layout and length.
-    TEST_ASSERT_EQUAL(1 + PUBKEY_LEN + 1 + CHAINCODE_LEN, g_resp_size);
-    TEST_ASSERT_EQUAL(PUBKEY_LEN, g_resp[0]);
-    TEST_ASSERT_EQUAL_MEMORY(G_context.pk_info.raw_public_key, g_resp + 1, PUBKEY_LEN);
-    TEST_ASSERT_EQUAL(CHAINCODE_LEN, g_resp[1 + PUBKEY_LEN]);
-    TEST_ASSERT_EQUAL_MEMORY(G_context.pk_info.chain_code, g_resp + 1 + PUBKEY_LEN + 1, CHAINCODE_LEN);
+    TEST_ASSERT_EQUAL(1 + CA_PUBLIC_KEY_LEN, g_resp_size);
+    TEST_ASSERT_EQUAL(CA_PUBLIC_KEY_LEN, g_resp[0]);
+    TEST_ASSERT_EQUAL_MEMORY(G_context.pk_info.raw_public_key, g_resp + 1, CA_PUBLIC_KEY_LEN);
 }
 
 // =========================================================================
 // helper_send_response_sig
-//   resp = signature_len | signature | v
+//   resp = signature_len | signature
 // =========================================================================
 
 void test_send_response_sig(void) {
-    const uint8_t sig_len = 10;
-    G_context.tx_info.signature_len = sig_len;
-    for (uint8_t i = 0; i < sig_len; i++) {
-        G_context.tx_info.signature[i] = (uint8_t) (0x40 + i);
-    }
-    G_context.tx_info.v = 0x01;
+    static const uint8_t sig[5] = {0xDE, 0xAD, 0xBE, 0xEF, 0x42};
+    memcpy(G_context.tbs.signature, sig, sizeof(sig));
+    G_context.tbs.signature_len = sizeof(sig);
 
     io_send_response_buffers_AddCallback(send_cb);
     io_send_response_buffers_ExpectAnyArgsAndReturn(SEND_RET);
@@ -108,18 +98,14 @@ void test_send_response_sig(void) {
     TEST_ASSERT_EQUAL(SEND_RET, ret);
     TEST_ASSERT_EQUAL(1, g_count);
     TEST_ASSERT_EQUAL_HEX16(SWO_SUCCESS, g_sw);
-
-    TEST_ASSERT_EQUAL(1 + sig_len + 1, g_resp_size);
-    TEST_ASSERT_EQUAL(sig_len, g_resp[0]);
-    TEST_ASSERT_EQUAL_MEMORY(G_context.tx_info.signature, g_resp + 1, sig_len);
-    TEST_ASSERT_EQUAL(G_context.tx_info.v, g_resp[1 + sig_len]);
+    TEST_ASSERT_EQUAL(1 + sizeof(sig), g_resp_size);
+    TEST_ASSERT_EQUAL(sizeof(sig), g_resp[0]);
+    TEST_ASSERT_EQUAL_MEMORY(sig, g_resp + 1, sizeof(sig));
 }
 
 int main(void) {
     UNITY_BEGIN();
-
     RUN_TEST(test_send_response_pubkey);
     RUN_TEST(test_send_response_sig);
-
     return UNITY_END();
 }

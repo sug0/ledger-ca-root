@@ -1,6 +1,6 @@
 /*****************************************************************************
- *   Ledger App Boilerplate.
- *   (c) 2020 Ledger SAS.
+ *   Ledger CA Root Application
+ *   (c) 2026
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -22,32 +22,28 @@
 #include "buffer.h"
 
 #include "send_response.h"
-#include "constants.h"
+#include "ca_key.h"
 #include "globals.h"
 #include "sw.h"
 
-int helper_send_response_pubkey() {
-    uint8_t resp[1 + PUBKEY_LEN + 1 + CHAINCODE_LEN] = {0};
+int helper_send_response_pubkey(void) {
+    uint8_t resp[1 + CA_PUBLIC_KEY_LEN] = {0};
     size_t offset = 0;
 
-    resp[offset++] = PUBKEY_LEN;
-    memmove(resp + offset, G_context.pk_info.raw_public_key, PUBKEY_LEN);
-    offset += PUBKEY_LEN;
-    resp[offset++] = CHAINCODE_LEN;
-    memmove(resp + offset, G_context.pk_info.chain_code, CHAINCODE_LEN);
-    offset += CHAINCODE_LEN;
+    resp[offset++] = CA_PUBLIC_KEY_LEN;
+    memmove(resp + offset, G_context.pk_info.raw_public_key, CA_PUBLIC_KEY_LEN);
+    offset += CA_PUBLIC_KEY_LEN;
 
     return io_send_response_pointer(resp, offset, SWO_SUCCESS);
 }
 
-int helper_send_response_sig() {
-    uint8_t resp[1 + MAX_DER_SIG_LEN + 1] = {0};
+int helper_send_response_sig(void) {
+    uint8_t resp[1 + CA_SIGNATURE_MAX_LEN] = {0};
     size_t offset = 0;
 
-    resp[offset++] = G_context.tx_info.signature_len;
-    memmove(resp + offset, G_context.tx_info.signature, G_context.tx_info.signature_len);
-    offset += G_context.tx_info.signature_len;
-    resp[offset++] = (uint8_t) G_context.tx_info.v;
+    resp[offset++] = (uint8_t) G_context.tbs.signature_len;
+    memmove(resp + offset, G_context.tbs.signature, G_context.tbs.signature_len);
+    offset += G_context.tbs.signature_len;
 
     return io_send_response_pointer(resp, offset, SWO_SUCCESS);
 }

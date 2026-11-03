@@ -1,6 +1,6 @@
 /*****************************************************************************
- *   Ledger App Boilerplate.
- *   (c) 2020 Ledger SAS.
+ *   Ledger CA Root Application
+ *   (c) 2026
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,11 +16,10 @@
  *****************************************************************************/
 
 #include <stdint.h>  // uint*_t
-#include <string.h>  // memset, explicit_bzero
+#include <string.h>  // memset
 
 #include "os.h"
 #include "ux.h"
-#include "swap.h"
 
 #include "types.h"
 #include "globals.h"
@@ -28,11 +27,8 @@
 #include "sw.h"
 #include "menu.h"
 #include "dispatcher.h"
-#include "dynamic_token_info.h"
 
 global_ctx_t G_context;
-
-const internal_storage_t N_storage_real;
 
 /**
  * Handle APDU command received and send back APDU response using handlers.
@@ -45,28 +41,10 @@ void app_main() {
 
     io_init();
 
-#ifdef HAVE_SWAP
-    // When called in swap context as a library, we don't want to show the menu
-    if (!G_called_from_swap) {
-#endif
-        ui_menu_main();
-#ifdef HAVE_SWAP
-    }
-#endif
+    ui_menu_main();
 
     // Reset context
-    explicit_bzero(&G_context, sizeof(G_context));
-
-    init_dynamic_token_storage();
-
-    // Initialize the NVM data if required
-    if (N_storage.initialized != 0x01) {
-        internal_storage_t storage;
-        storage.dummy1_allowed = 0x00;
-        storage.dummy2_allowed = 0x00;
-        storage.initialized = 0x01;
-        nvm_write((void *) &N_storage, &storage, sizeof(internal_storage_t));
-    }
+    memset(&G_context, 0, sizeof(G_context));
 
     for (;;) {
         // Receive command bytes in G_io_apdu_buffer

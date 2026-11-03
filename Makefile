@@ -149,43 +149,8 @@ VARIANT_VALUES = ed25519 p256
 ########################################
 # Application communication interfaces #
 ########################################
-ENABLE_BLUETOOTH = 1
 #ENABLE_NFC = 1
 ENABLE_NBGL_FOR_NANO_DEVICES = 1
-
-########################################
-#         NBGL custom features         #
-########################################
-ENABLE_NBGL_QRCODE = 1
-#ENABLE_NBGL_KEYBOARD = 1
-#ENABLE_NBGL_KEYPAD = 1
-
-########################################
-#       SWAP FEATURE FLAG      		   #
-# This flag enables the swap feature   #
-# in the Boilerplate application.      #
-########################################
-# This is a smart documentation inclusion. The full documentation is available at https://ledgerhq.github.io/app-exchange/
-# --8<-- [start:variables]
-ifeq ($(APPNAME), "Boilerplate")
-# Two flags exist for enabling the SWAP
-#   - ENABLE_SWAP           will lead to the enabling of the swap related C code of the standard_app
-#                           AND will lead to the enabling of the APP_LOAD_PARAM required for os_lib_call working on device
-#   - ENABLE_TESTING_SWAP:  will lead to the enabling of the swap related C code of the standard_app
-#                           ONLY works on Speculos, not on device
-# Testing only SWAP flag
-ENABLE_TESTING_SWAP = 1
-# Production enabled SWAP flag
-# ENABLE_SWAP = 1
-endif
-# --8<-- [end:variables]
-
-########################################
-#          TLV & PKI features          #
-########################################
-# Both are used in the Dynamic Token example
-ENABLE_TLV_LIBRARY = 1
-ENABLE_PKI_LIBRARY = 1
 
 ########################################
 #        Stack protection features     #
