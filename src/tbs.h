@@ -57,3 +57,19 @@ typedef struct {
  * @return true if the structure is well-formed
  */
 bool tbs_parse(const uint8_t *buf, size_t len, tbs_info_t *info);
+
+/**
+ * Format a validity time (UTCTime or GeneralizedTime content, as parsed by
+ * tbs_parse) as YYYY-MM-DD into out.
+ *
+ * Accepts only well-formed content: "YYMMDDHHMMSSZ" or "YYYYMMDDHHMMSSZ"
+ * with decimal digits and a trailing Z. UTCTime years 50-99 map to 19xx,
+ * 00-49 to 20xx (RFC 5280).
+ *
+ * @param[in]  time  time value content
+ * @param[in]  len   content length
+ * @param[out] out   formatted date, 11 bytes including NUL
+ *
+ * @return true if the content was well-formed
+ */
+bool tbs_format_date(const uint8_t *time, size_t len, char out[11]);

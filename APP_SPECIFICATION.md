@@ -138,7 +138,7 @@ After the last chunk the application parses the structure (see
 | ---     | ---                                                |
 | Subject | subject CommonName (omitted if the name has none)  |
 | Serial  | serialNumber content as `0x`-prefixed hex          |
-| Valid   | `notBefore - notAfter` (UTCTime/GeneralizedTime)   |
+| Valid   | `notBefore - notAfter` as `YYYY-MM-DD` (RFC 5280), raw content if malformed |
 
 Approving (hold to sign) produces the signature; rejecting returns
 `SWO_CONDITIONS_NOT_SATISFIED`. A CommonName longer than 62 bytes is a hard

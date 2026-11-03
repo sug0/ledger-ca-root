@@ -56,13 +56,26 @@ static uint16_t format_review_fields(void) {
         return SWO_INCORRECT_DATA;
     }
 
-    snprintf(G_context.tbs.validity,
-             sizeof(G_context.tbs.validity),
-             "%.*s - %.*s",
-             (int) info.not_before_len,
-             (const char *) info.not_before,
-             (int) info.not_after_len,
-             (const char *) info.not_after);
+    char not_before[11];
+    char not_after[11];
+    if (tbs_format_date(info.not_before, info.not_before_len, not_before) &&
+        tbs_format_date(info.not_after, info.not_after_len, not_after)) {
+        snprintf(G_context.tbs.validity,
+                 sizeof(G_context.tbs.validity),
+                 "%s - %s",
+                 not_before,
+                 not_after);
+    } else {
+        // show the raw time content for anything the structural parser
+        // accepted but the formatter rejects
+        snprintf(G_context.tbs.validity,
+                 sizeof(G_context.tbs.validity),
+                 "%.*s - %.*s",
+                 (int) info.not_before_len,
+                 (const char *) info.not_before,
+                 (int) info.not_after_len,
+                 (const char *) info.not_after);
+    }
     return SWO_SUCCESS;
 }
 

@@ -262,6 +262,41 @@ void test_extra_content_in_validity_rejected(void) {
     TEST_ASSERT_FALSE(tbs_parse(broken, sizeof(broken), &info));
 }
 
+void test_format_date_utc_time(void) {
+    char out[11];
+
+    TEST_ASSERT_TRUE(tbs_format_date((const uint8_t *) "260101000000Z", 13, out));
+    TEST_ASSERT_EQUAL_STRING("2026-01-01", out);
+}
+
+void test_format_date_utc_century_rule(void) {
+    char out[11];
+
+    TEST_ASSERT_TRUE(tbs_format_date((const uint8_t *) "491231235959Z", 13, out));
+    TEST_ASSERT_EQUAL_STRING("2049-12-31", out);
+    TEST_ASSERT_TRUE(tbs_format_date((const uint8_t *) "500101000000Z", 13, out));
+    TEST_ASSERT_EQUAL_STRING("1950-01-01", out);
+}
+
+void test_format_date_generalized_time(void) {
+    char out[11];
+
+    TEST_ASSERT_TRUE(tbs_format_date((const uint8_t *) "20260101000000Z", 15, out));
+    TEST_ASSERT_EQUAL_STRING("2026-01-01", out);
+}
+
+void test_format_date_rejects_malformed(void) {
+    char out[11];
+
+    // wrong length, missing or wrong trailing Z, non-digit content
+    TEST_ASSERT_FALSE(tbs_format_date((const uint8_t *) "260101000000", 12, out));
+    TEST_ASSERT_FALSE(tbs_format_date((const uint8_t *) "20260101000000", 14, out));
+    TEST_ASSERT_FALSE(tbs_format_date((const uint8_t *) "260101000000X", 13, out));
+    TEST_ASSERT_FALSE(tbs_format_date((const uint8_t *) "202601010000000", 15, out));
+    TEST_ASSERT_FALSE(tbs_format_date((const uint8_t *) "2A0101000000Z", 13, out));
+    TEST_ASSERT_FALSE(tbs_format_date((const uint8_t *) "2026010100000.Z", 15, out));
+}
+
 int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_v3_certificate);
@@ -278,6 +313,10 @@ int main(void) {
     RUN_TEST(test_bad_serial_tag_rejected);
     RUN_TEST(test_long_serial_rejected);
     RUN_TEST(test_bad_validity_time_tag_rejected);
+    RUN_TEST(test_format_date_utc_time);
+    RUN_TEST(test_format_date_utc_century_rule);
+    RUN_TEST(test_format_date_generalized_time);
+    RUN_TEST(test_format_date_rejects_malformed);
     RUN_TEST(test_unexpected_tail_field_rejected);
     RUN_TEST(test_extra_content_in_validity_rejected);
     return UNITY_END();

@@ -50,7 +50,7 @@ typedef struct {
     uint8_t expected_chunk;                   /// P1 sequence number of the next chunk
     char subject_cn[TBS_CN_MAX_LEN + 1];      /// subject CommonName, NUL-terminated
     char serial[2 + 2 * 21 + 1];              /// serialNumber as "0x" + hex
-    char validity[13 + 3 + 15 + 1];           /// "notBefore - notAfter"
+    char validity[13 + 3 + 15 + 1];           /// "YYYY-MM-DD - YYYY-MM-DD", raw content as fallback
     uint8_t signature[CA_SIGNATURE_MAX_LEN];  /// signature produced on approval
     size_t signature_len;                     /// length of the signature
 } sign_tbs_ctx_t;

@@ -66,7 +66,7 @@ def test_intermediate_certificate_chain(client, sender, variant, backend, review
         console(
             f">>> expected on the device: Subject '{SUBJECT_CN.decode()}',"
             f" Serial '0x{serial.hex()}',"
-            f" Valid '{NOT_BEFORE.decode()} - {NOT_AFTER.decode()}'"
+            " Valid '2026-01-01 - 2036-01-01'"
         )
 
     # --- sign on the device over the exact TBS bytes

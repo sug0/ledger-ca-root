@@ -186,3 +186,42 @@ bool tbs_parse(const uint8_t *buf, size_t len, tbs_info_t *info) {
     }
     return cursor == seq_end;
 }
+
+bool tbs_format_date(const uint8_t *time, size_t len, char out[11]) {
+    const char *src = (const char *) time;
+    size_t year_digits;
+    int year;
+
+    if (len == 13 && src[12] == 'Z') {
+        // UTCTime: RFC 5280 restricts it to 1950-2049, two-digit year
+        year_digits = 2;
+        int yy = 10 * (src[0] - '0') + (src[1] - '0');
+        year = yy < 50 ? 2000 + yy : 1900 + yy;
+    } else if (len == 15 && src[14] == 'Z') {
+        year_digits = 4;
+        year = 1000 * (src[0] - '0') + 100 * (src[1] - '0') + 10 * (src[2] - '0') + (src[3] - '0');
+    } else {
+        return false;
+    }
+
+    // everything up to the trailing Z must be a decimal digit
+    for (size_t i = 0; i < len - 1; i++) {
+        if (src[i] < '0' || src[i] > '9') {
+            return false;
+        }
+    }
+
+    const char *month_day = src + year_digits;
+    out[0] = (char) ('0' + year / 1000 % 10);
+    out[1] = (char) ('0' + year / 100 % 10);
+    out[2] = (char) ('0' + year / 10 % 10);
+    out[3] = (char) ('0' + year % 10);
+    out[4] = '-';
+    out[5] = month_day[0];
+    out[6] = month_day[1];
+    out[7] = '-';
+    out[8] = month_day[2];
+    out[9] = month_day[3];
+    out[10] = '\0';
+    return true;
+}
