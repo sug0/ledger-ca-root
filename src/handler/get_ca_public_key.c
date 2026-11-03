@@ -17,17 +17,16 @@
 
 #include <stdint.h>  // uint*_t
 
-#include "io.h"
-
 #include "get_ca_public_key.h"
 #include "ca_key.h"
 #include "globals.h"
 #include "send_response.h"
-#include "sw.h"
 
 int handler_get_ca_public_key(void) {
-    if (!ca_get_public_key(G_context.pk_info.raw_public_key)) {
-        return io_send_sw(SWO_SECURITY_ISSUE);
+    uint16_t err_code = 0;
+    ca_key_error_t stage = ca_get_public_key(G_context.pk_info.raw_public_key, &err_code);
+    if (stage != CA_KEY_OK) {
+        return helper_send_ca_key_error(stage, err_code);
     }
     return helper_send_response_pubkey();
 }

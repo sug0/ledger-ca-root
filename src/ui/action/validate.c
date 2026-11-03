@@ -32,12 +32,15 @@ void validate_tbs(bool choice) {
     }
 
     G_context.state = STATE_APPROVED;
-    if (!ca_sign(G_context.tbs.tbs,
-                 G_context.tbs.tbs_len,
-                 G_context.tbs.signature,
-                 &G_context.tbs.signature_len)) {
+    uint16_t err_code = 0;
+    ca_key_error_t stage = ca_sign(G_context.tbs.tbs,
+                                   G_context.tbs.tbs_len,
+                                   G_context.tbs.signature,
+                                   &G_context.tbs.signature_len,
+                                   &err_code);
+    if (stage != CA_KEY_OK) {
         G_context.state = STATE_NONE;
-        io_send_sw(SWO_SECURITY_ISSUE);
+        helper_send_ca_key_error(stage, err_code);
         return;
     }
     helper_send_response_sig();

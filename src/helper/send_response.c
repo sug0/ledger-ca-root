@@ -47,3 +47,25 @@ int helper_send_response_sig(void) {
 
     return io_send_response_pointer(resp, offset, SWO_SUCCESS);
 }
+
+int helper_send_ca_key_error(ca_key_error_t stage, uint16_t err_code) {
+    uint16_t sw = SWO_CA_KEY_LEN;
+    switch (stage) {
+    case CA_KEY_ERR_DERIVE:
+        sw = SWO_CA_KEY_DERIVE;
+        break;
+    case CA_KEY_ERR_INIT:
+        sw = SWO_CA_KEY_INIT;
+        break;
+    case CA_KEY_ERR_PAIR:
+        sw = SWO_CA_KEY_PAIR;
+        break;
+    case CA_KEY_ERR_SIGN:
+        sw = SWO_CA_KEY_SIGN;
+        break;
+    default:
+        break;
+    }
+    const uint8_t data[2] = {(uint8_t) (err_code >> 8), (uint8_t) err_code};
+    return io_send_response_pointer(data, sizeof(data), sw);
+}

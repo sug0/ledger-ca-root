@@ -21,7 +21,10 @@ class ApduError(Exception):
     def __init__(self, sw, data=b""):
         self.sw = sw
         self.data = data
-        super().__init__(f"device returned status word {sw:04x}")
+        super().__init__(
+            f"device returned status word {sw:04x}"
+            + (f" (data {data.hex()})" if data else "")
+        )
 
 
 def _exchange(dongle, apdu, timeout_s):

@@ -148,7 +148,11 @@ reject rather than a truncated display.
 
 | SW   | SW name                      | Description                                        |
 | ---  | ---                          | ---                                                |
-| 6600 | SWO_SECURITY_ISSUE           | Key derivation or signing failed                   |
+| 66A0 | SWO_CA_KEY_DERIVE            | Seed derivation refused or failed                  |
+| 66A1 | SWO_CA_KEY_INIT              | CA private key import failed                       |
+| 66A2 | SWO_CA_KEY_PAIR              | CA public key computation failed                   |
+| 66A3 | SWO_CA_KEY_SIGN              | Signature computation failed                       |
+| 66A4 | SWO_CA_KEY_LEN               | CA public key has an unexpected length             |
 | 6985 | SWO_CONDITIONS_NOT_SATISFIED | Rejected by user, or a signing flow is in progress |
 | 6A80 | SWO_INCORRECT_DATA           | Malformed TBSCertificate or out-of-sequence chunk  |
 | 6A86 | SWO_INCORRECT_P1_P2          | Either P1 or P2 is incorrect                       |
@@ -156,3 +160,8 @@ reject rather than a truncated display.
 | 6D00 | SWO_INVALID_INS              | No command exists with INS                         |
 | 6E00 | SWO_INVALID_CLA              | Bad CLA used for this application                  |
 | 9000 | OK                           | Success                                            |
+
+The `66Ax` words are returned by GET CA PUBLIC KEY and SIGN TBS when a CA key
+operation fails. Their response data carries the raw error code of the
+failing syscall as two big-endian bytes, which localizes the failure on a
+real device where the application cannot print diagnostics.

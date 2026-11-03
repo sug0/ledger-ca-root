@@ -41,7 +41,7 @@ static const uint32_t CA_PATH[] = {0x800022B8, 0x80000000};
  * Derive the CA private key from the device seed. The key material never
  * leaves this module; the caller gets a zeroized key on failure.
  */
-static bool derive_ca_privkey(cx_ecfp_private_key_t *privkey) {
+static ca_key_error_t derive_ca_privkey(cx_ecfp_private_key_t *privkey, uint16_t *err_code) {
     uint8_t raw_privkey[64];  // 64 bytes per the syscall API, 32 are used
     cx_err_t error = os_derive_bip32_with_seed_no_throw(CA_DERIVATION_MODE,
                                                         CA_CURVE,
@@ -51,79 +51,110 @@ static bool derive_ca_privkey(cx_ecfp_private_key_t *privkey) {
                                                         NULL,
                                                         NULL,
                                                         0);
+    ca_key_error_t stage = CA_KEY_ERR_DERIVE;
     if (error == CX_OK) {
+        stage = CA_KEY_ERR_INIT;
         error = cx_ecfp_init_private_key_no_throw(CA_CURVE, raw_privkey, 32, privkey);
     }
     memset(raw_privkey, 0, sizeof(raw_privkey));
-    return error == CX_OK;
+    if (error != CX_OK) {
+        *err_code = (uint16_t) error;
+    }
+    return error == CX_OK ? CA_KEY_OK : stage;
 }
 
-bool ca_get_public_key(uint8_t *out) {
+ca_key_error_t ca_get_public_key(uint8_t *out, uint16_t *err_code) {
     cx_ecfp_private_key_t privkey;
     cx_ecfp_public_key_t pubkey;
-    bool ok = derive_ca_privkey(&privkey);
-    if (ok) {
-        ok = cx_ecfp_generate_pair_no_throw(CA_CURVE, &pubkey, &privkey, true) == CX_OK;
+    cx_err_t error;
+    ca_key_error_t stage = derive_ca_privkey(&privkey, err_code);
+
+    if (stage == CA_KEY_OK) {
+        error = cx_ecfp_generate_pair_no_throw(CA_CURVE, &pubkey, &privkey, true);
+        if (error != CX_OK) {
+            *err_code = (uint16_t) error;
+            stage = CA_KEY_ERR_PAIR;
+        } else if (pubkey.W_len != CA_PUBLIC_KEY_LEN) {
+            stage = CA_KEY_ERR_LEN;
+        } else {
+            memcpy(out, pubkey.W, CA_PUBLIC_KEY_LEN);
+        }
     }
     memset(&privkey, 0, sizeof(privkey));
-    if (!ok || pubkey.W_len != CA_PUBLIC_KEY_LEN) {
-        return false;
-    }
-    memcpy(out, pubkey.W, CA_PUBLIC_KEY_LEN);
-    return true;
+    return stage;
 }
 
 #if defined(USE_ED25519)
 
-bool ca_sign(const uint8_t *tbs, size_t tbs_len, uint8_t *sig, size_t *sig_len) {
+ca_key_error_t ca_sign(const uint8_t *tbs,
+                       size_t tbs_len,
+                       uint8_t *sig,
+                       size_t *sig_len,
+                       uint16_t *err_code) {
     cx_ecfp_private_key_t privkey;
-    bool ok = derive_ca_privkey(&privkey);
-    if (ok) {
+    ca_key_error_t stage = derive_ca_privkey(&privkey, err_code);
+
+    if (stage == CA_KEY_OK) {
         // Ed25519 signs the message directly; cxng computes the two SHA-512
         // passes of RFC 8032 internally
-        ok = cx_eddsa_sign_no_throw(&privkey, CX_SHA512, tbs, tbs_len, sig, CA_SIGNATURE_MAX_LEN) ==
-             CX_OK;
+        cx_err_t error =
+            cx_eddsa_sign_no_throw(&privkey, CX_SHA512, tbs, tbs_len, sig, CA_SIGNATURE_MAX_LEN);
+        if (error == CX_OK) {
+            *sig_len = CA_SIGNATURE_MAX_LEN;
+        } else {
+            *err_code = (uint16_t) error;
+            stage = CA_KEY_ERR_SIGN;
+        }
     }
     memset(&privkey, 0, sizeof(privkey));
-    if (ok) {
-        *sig_len = CA_SIGNATURE_MAX_LEN;
-    }
-    return ok;
+    return stage;
 }
 
 #elif defined(USE_P256)
 
-bool ca_sign(const uint8_t *tbs, size_t tbs_len, uint8_t *sig, size_t *sig_len) {
+ca_key_error_t ca_sign(const uint8_t *tbs,
+                       size_t tbs_len,
+                       uint8_t *sig,
+                       size_t *sig_len,
+                       uint16_t *err_code) {
     cx_ecfp_private_key_t privkey;
     cx_sha256_t hash;
     uint8_t digest[CX_SHA256_SIZE];
     uint32_t info;
     cx_err_t error = CX_OK;
 
-    if (!derive_ca_privkey(&privkey)) {
-        return false;
-    }
+    ca_key_error_t stage = derive_ca_privkey(&privkey, err_code);
 
-    error = cx_sha256_init_no_throw(&hash);
-    if (error == CX_OK) {
-        error =
-            cx_hash_no_throw((cx_hash_t *) &hash, CX_LAST, tbs, tbs_len, digest, sizeof(digest));
-    }
-    if (error == CX_OK) {
-        error = cx_ecdsa_sign_no_throw(&privkey,
-                                       CX_RND_RFC6979,
-                                       CX_SHA256,
-                                       digest,
-                                       sizeof(digest),
-                                       sig,
-                                       sig_len,
-                                       &info);
+    if (stage == CA_KEY_OK) {
+        error = cx_sha256_init_no_throw(&hash);
+        if (error == CX_OK) {
+            error = cx_hash_no_throw((cx_hash_t *) &hash,
+                                     CX_LAST,
+                                     tbs,
+                                     tbs_len,
+                                     digest,
+                                     sizeof(digest));
+        }
+        if (error == CX_OK) {
+            error = cx_ecdsa_sign_no_throw(&privkey,
+                                           CX_RND_RFC6979,
+                                           CX_SHA256,
+                                           digest,
+                                           sizeof(digest),
+                                           sig,
+                                           sig_len,
+                                           &info);
+        }
+        if (error != CX_OK) {
+            *err_code = (uint16_t) error;
+            stage = CA_KEY_ERR_SIGN;
+        }
     }
 
     memset(digest, 0, sizeof(digest));
     memset(&hash, 0, sizeof(hash));
     memset(&privkey, 0, sizeof(privkey));
-    return error == CX_OK;
+    return stage;
 }
 
 #endif

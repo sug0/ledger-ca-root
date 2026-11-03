@@ -17,9 +17,8 @@
 
 #pragma once
 
-#include <stdbool.h>  // bool
-#include <stddef.h>   // size_t
-#include <stdint.h>   // uint*_t
+#include <stddef.h>  // size_t
+#include <stdint.h>  // uint*_t
 
 /**
  * Compile-time curve variant, selected by the Makefile via CA_VARIANT.
@@ -35,25 +34,45 @@
 #endif
 
 /**
+ * Failure stage of a CA key operation. A real device has no PRINTF, so the
+ * stage is reported to the host as a distinct status word (see sw.h) and
+ * the failing syscall's raw error code rides along in the response data.
+ */
+typedef enum {
+    CA_KEY_OK = 0,      ///< success
+    CA_KEY_ERR_DERIVE,  ///< seed derivation refused or failed
+    CA_KEY_ERR_INIT,    ///< private key import failed
+    CA_KEY_ERR_PAIR,    ///< public key computation failed
+    CA_KEY_ERR_SIGN,    ///< signature computation failed
+    CA_KEY_ERR_LEN,     ///< unexpected public key length
+} ca_key_error_t;
+
+/**
  * Derive the CA key from the device seed at m/8888'/0' and export the raw
  * public key.
  *
- * @param[out] out raw public key, CA_PUBLIC_KEY_LEN bytes
+ * @param[out] out      raw public key, CA_PUBLIC_KEY_LEN bytes
+ * @param[out] err_code raw cx error code of the failing syscall, 0 if none
  *
- * @return true on success
+ * @return CA_KEY_OK on success, the failure stage otherwise
  */
-bool ca_get_public_key(uint8_t *out);
+ca_key_error_t ca_get_public_key(uint8_t *out, uint16_t *err_code);
 
 /**
  * Sign the DER TBSCertificate bytes with the CA key derived from the device
  * seed. The signature covers the input bytes verbatim (Ed25519) or their
  * SHA-256 digest (ECDSA over secp256r1, DER encoded, deterministic nonce).
  *
- * @param[in]  tbs     TBSCertificate DER bytes
- * @param[in]  tbs_len input length
- * @param[out] sig     signature, at most CA_SIGNATURE_MAX_LEN bytes
- * @param[out] sig_len actual signature length
+ * @param[in]  tbs      TBSCertificate DER bytes
+ * @param[in]  tbs_len  input length
+ * @param[out] sig      signature, at most CA_SIGNATURE_MAX_LEN bytes
+ * @param[out] sig_len  actual signature length
+ * @param[out] err_code raw cx error code of the failing syscall, 0 if none
  *
- * @return true on success
+ * @return CA_KEY_OK on success, the failure stage otherwise
  */
-bool ca_sign(const uint8_t *tbs, size_t tbs_len, uint8_t *sig, size_t *sig_len);
+ca_key_error_t ca_sign(const uint8_t *tbs,
+                       size_t tbs_len,
+                       uint8_t *sig,
+                       size_t *sig_len,
+                       uint16_t *err_code);
