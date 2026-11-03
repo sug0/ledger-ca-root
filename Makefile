@@ -141,7 +141,11 @@ VARIANT_VALUES = ed25519 p256
 #     Application custom permissions   #
 ########################################
 # See SDK `include/appflags.h` for the purpose of each permission
-#HAVE_APPLICATION_FLAG_DERIVE_MASTER = 1
+# The CA key derives from the device seed at m/8888'/0', a master-seed
+# operation the OS only grants to apps installed with this flag (speculos
+# does not enforce it); installing an app with custom permissions needs a
+# developer root key on the device
+HAVE_APPLICATION_FLAG_DERIVE_MASTER = 1
 #HAVE_APPLICATION_FLAG_GLOBAL_PIN = 1
 #HAVE_APPLICATION_FLAG_BOLOS_SETTINGS = 1
 #HAVE_APPLICATION_FLAG_LIBRARY = 1
