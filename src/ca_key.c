@@ -15,7 +15,8 @@
  *  limitations under the License.
  *****************************************************************************/
 
-#include <string.h>  // memset, memcpy
+#include <stdbool.h>  // bool
+#include <string.h>   // memset, memcpy
 
 #include "os.h"
 #include "cx.h"
@@ -63,6 +64,43 @@ static ca_key_error_t derive_ca_privkey(cx_ecfp_private_key_t *privkey, uint16_t
     return error == CX_OK ? CA_KEY_OK : stage;
 }
 
+#if defined(USE_ED25519)
+
+/**
+ * Copy the public key in the canonical RFC 8032 encoding: little-endian Y
+ * with the sign of X in bit 255. Speculos exports the point already in that
+ * 32-byte form, while the secure element exports affine coordinates as
+ * 04 || X || Y with big-endian bytes (the same layout app-solana converts).
+ */
+static bool copy_public_key(uint8_t *out, const cx_ecfp_public_key_t *pubkey) {
+    if (pubkey->W_len == CA_PUBLIC_KEY_LEN) {
+        memcpy(out, pubkey->W, CA_PUBLIC_KEY_LEN);
+        return true;
+    }
+    if (pubkey->W_len != 1 + 2 * CA_PUBLIC_KEY_LEN || pubkey->W[0] != 0x04) {
+        return false;
+    }
+    for (size_t i = 0; i < CA_PUBLIC_KEY_LEN; i++) {
+        out[i] = pubkey->W[1 + 2 * CA_PUBLIC_KEY_LEN - 1 - i];
+    }
+    if (pubkey->W[CA_PUBLIC_KEY_LEN] & 1) {
+        out[CA_PUBLIC_KEY_LEN - 1] |= 0x80;
+    }
+    return true;
+}
+
+#elif defined(USE_P256)
+
+static bool copy_public_key(uint8_t *out, const cx_ecfp_public_key_t *pubkey) {
+    if (pubkey->W_len != CA_PUBLIC_KEY_LEN) {
+        return false;
+    }
+    memcpy(out, pubkey->W, CA_PUBLIC_KEY_LEN);
+    return true;
+}
+
+#endif
+
 ca_key_error_t ca_get_public_key(uint8_t *out, uint16_t *err_code) {
     cx_ecfp_private_key_t privkey;
     cx_ecfp_public_key_t pubkey;
@@ -74,10 +112,8 @@ ca_key_error_t ca_get_public_key(uint8_t *out, uint16_t *err_code) {
         if (error != CX_OK) {
             *err_code = (uint16_t) error;
             stage = CA_KEY_ERR_PAIR;
-        } else if (pubkey.W_len != CA_PUBLIC_KEY_LEN) {
+        } else if (!copy_public_key(out, &pubkey)) {
             stage = CA_KEY_ERR_LEN;
-        } else {
-            memcpy(out, pubkey.W, CA_PUBLIC_KEY_LEN);
         }
     }
     memset(&privkey, 0, sizeof(privkey));
