@@ -190,3 +190,8 @@ include $(BOLOS_SDK)/Makefile.standard_app
 # Recent clang lowers unaligned 4-byte accesses to __aeabi_* runtime calls
 # that the SDK's prebuilt libraries don't provide; the SDK's libgcc.a does
 LDLIBS += -lgcc
+
+# NB: the SDK's load-offline calls `--offline` without a filename, which newer
+# ledgerblue (>= 0.1.58) rejects; here it regenerates the root bin/app.apdu
+load-offline: all
+	python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS) --offline bin/app.apdu
