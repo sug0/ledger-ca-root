@@ -73,13 +73,16 @@ jobs:
           python -m venv "$HOME/venv-ledger"
           "$HOME/venv-ledger/bin/pip" install ledgerblue
           python -m venv "$HOME/venv-speculos"
-          "$HOME/venv-speculos/bin/pip" install speculos pycryptodome pytest
+          "$HOME/venv-speculos/bin/pip" install speculos pycryptodome pytest pytest-timeout
 
       - name: Build
         run: make SYSROOT=/usr/lib/picolibc/arm-none-eabi ${{ matrix.variant }}
 
       - name: Run e2e test
-        run: make test SYSROOT=/usr/lib/picolibc/arm-none-eabi CA_VARIANT=${{ matrix.variant }} BACKEND=speculos
+        # pytest-timeout bounds a stuck approval so it fails with a traceback
+        # (and uploads screenshots) instead of stalling until the emulator's
+        # APDU long-poll drops the connection
+        run: make test SYSROOT=/usr/lib/picolibc/arm-none-eabi CA_VARIANT=${{ matrix.variant }} BACKEND=speculos PYTEST_ARGS="--timeout=120"
 
       - name: Upload screenshots on failure
         if: failure()

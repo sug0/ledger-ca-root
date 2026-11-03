@@ -135,14 +135,18 @@ def review_approve(client, backend):
 
         deadline = time.monotonic() + REVIEW_TIMEOUT_S
         clicks = 0
+        on_hold_page = False
         while time.monotonic() < deadline and clicks < MAX_REVIEW_CLICKS:
             texts = _screen_texts(client)
             if any("hold to sign" in text.lower() for text in texts):
+                on_hold_page = True
                 break
             client.press_and_release("right")
             clicks += 1
             time.sleep(0.3)
         (SCREENSHOT_DIR / "review-hold.png").write_bytes(client.get_screenshot())
+        if not on_hold_page:
+            console(">>> speculos: 'hold to sign' not reached; holding anyway")
 
         # hold the right button to sign; the APDU response is sent on release
         _press(client, "right", "press")
@@ -161,6 +165,8 @@ def _screen_texts(client):
     """Texts currently on screen; empty when the extraction is unavailable."""
     try:
         content = client.get_current_screen_content()
-        return content.get("text") or []
-    except Exception:
+    except Exception as e:
+        console(f">>> speculos: screen content unavailable: {e!r}")
         return []
+    # GET /events?currentscreenonly=true returns {"events": [{"text": ...}]}
+    return [e.get("text", "") for e in content.get("events", []) if isinstance(e, dict)]
