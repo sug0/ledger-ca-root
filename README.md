@@ -1,7 +1,20 @@
-# Ledger C Application
+# CA Root — Ledger Certificate Authority
 
-Starting point for Ledger hardware wallet applications written in C, based on
-the [Ledger app-boilerplate](https://github.com/LedgerHQ/app-boilerplate).
+A Ledger application that acts as the offline root of a small certificate
+authority: it holds a non-exportable CA key derived from the device seed and
+signs X.509 `TBSCertificate` structures on approval. The signature covers the
+exact TBS bytes that go into the distributed certificate, so the returned
+signature can be attached to the certificate as-is.
+
+Two compile-time variants exist and can be installed side by side:
+
+| Variant   | App name        | CA key                            | Signature                    |
+| --------- | --------------- | --------------------------------- | ---------------------------- |
+| `ed25519` | CA Root Ed25519 | SLIP-0010 Ed25519 at `m/8888'/0'` | Ed25519, 64 bytes, raw       |
+| `p256`    | CA Root P256    | BIP32 secp256r1 at `m/8888'/0'`   | ECDSA-SHA256, DER, ≤ 72 bytes |
+
+Protocol documentation: [APP_SPECIFICATION.md](APP_SPECIFICATION.md),
+[doc/APDU.md](doc/APDU.md), [doc/TBS.md](doc/TBS.md).
 
 ## Prerequisites
 
@@ -10,16 +23,14 @@ the [Ledger app-boilerplate](https://github.com/LedgerHQ/app-boilerplate).
 | GNU make >= 4.2 | `brew install make` (run as `gmake`) | `apt install make` |
 | LLVM clang + lld | `brew install llvm lld` | `apt install clang lld` |
 | GNU coreutils | `brew install coreutils` | included |
-| arm-none-eabi toolchain with newlib | `brew install --cask gcc-arm-embedded` (the `arm-none-eabi-gcc` formula lacks newlib) | `apt install gcc-arm-none-eabi libnewlib-arm-none-eabi` |
-| jq | `brew install jq` | `apt install jq` |
+| python3 with venv | included | included |
 
-Sanity check: `arm-none-eabi-gcc -print-sysroot` must print a path, not nothing.
-
-Python virtualenv with the tools used by the build and for sideloading:
+A Python virtualenv with ledgerblue is used by the build's install-params step
+and for sideloading:
 
 ```shell
-python3 -m venv .venv
-.venv/bin/pip install ledgerblue ledgered pillow protobuf ecdsa
+python3 -m venv ~/.venvs/ledger
+~/.venvs/ledger/bin/pip install ledgerblue ledgered pillow
 ```
 
 ## Setup
@@ -39,7 +50,7 @@ precedence over the Apple system tools):
 
 ```make
 BOLOS_SDK ?= /path/to/ledger-secure-sdk
-LEDGER_VENV ?= /path/to/.venv
+LEDGER_VENV ?= ~/.venvs/ledger
 CLANGPATH ?= /opt/homebrew/opt/llvm/bin/
 PREPEND_PATH ?= /opt/homebrew/opt/llvm/bin /opt/homebrew/opt/lld/bin /opt/homebrew/opt/coreutils/libexec/gnubin
 ```
@@ -48,27 +59,28 @@ Linux example (distro packages, nothing extra needed):
 
 ```make
 BOLOS_SDK ?= /path/to/ledger-secure-sdk
-LEDGER_VENV ?= /path/to/.venv
+LEDGER_VENV ?= ~/.venvs/ledger
 ```
 
 ## Build
 
 ```shell
-make          # Linux
+make          # Linux: builds both variants
 gmake         # macOS
 ```
 
 Builds for Nano S+ by default. Other devices: `make TARGET=nanox|stax|flex|apex_p|apex_m`.
+A single variant: `make ed25519` or `make p256`.
 
 Useful flags: `DEBUG=1` (enable `PRINTF`), `VERBOSE=1` (print every command).
 
-Outputs:
+Outputs (per variant):
 
 | File | Purpose |
 |------|---------|
-| `build/<target>/bin/app.elf` | linked application (run this in Speculos) |
-| `build/<target>/bin/app.apdu` | APDU stream to install the app |
-| `build/<target>/bin/app.hex`, `app.sha256` | flashing / integrity |
+| `build/<variant>/<target>/bin/app.elf` | linked application (run this in Speculos) |
+| `build/<variant>/<target>/bin/app.apdu` | APDU stream to install the app |
+| `build/<variant>/<target>/bin/app.hex`, `app.sha256` | flashing / integrity |
 | `bin/`, `debug/` | copies of the above plus link map and disassembly |
 
 ## Load on a device
@@ -76,9 +88,9 @@ Outputs:
 Device must be connected, unlocked, on the dashboard:
 
 ```shell
-make load      # build, then sideload
-make delete    # remove the app
+make load              # build, then sideload (current variant)
 make load-offline
+make delete            # remove the app
 ```
 
 With a developer custom CA installed on the device, set `SCP_PRIVKEY` in
@@ -88,7 +100,6 @@ developer mode instead.
 ## Run on Speculos
 
 ```shell
-pip install speculos   # not part of the venv by default
 speculos --model nanosp build/ed25519/nanos2/bin/app.elf
 ```
 
@@ -98,16 +109,18 @@ macOS use the speculos Docker image
 
 ## Tests
 
-- Unit tests (C, cmake + Unity): `ctest --test-dir unit-tests/build` after
-  configuring `cmake -S unit-tests -B unit-tests/build`
+- Unit tests (C, cmake + Unity): configure with
+  `cmake -S unit-tests -B unit-tests/build`, run with
+  `ctest --test-dir unit-tests/build`.
 - End-to-end test against speculos (certificate issuance flow, both
   variants): `make test`, see `tests/README.md` for the venv setup
-  (`SPECULOS_VENV` in `mkconfig`)
+  (`SPECULOS_VENV` in `mkconfig`).
+- CI (`.github/workflows/ci.yml`) runs both suites on GitHub-hosted runners.
 
 ## Documentation
 
-Protocol documentation (application specification, APDU, transaction
-serialization) is generated with doxygen:
+The protocol documentation (application specification, APDU framing, TBS
+format) is generated with doxygen:
 
 ```shell
 doxygen .doxygen/Doxyfile

@@ -4,17 +4,18 @@ Instructions for AI coding agents working in this repository.
 
 ## What this is
 
-Scaffolding for Ledger hardware wallet applications in C. Derived projects
-start from a clone of this repo; keep it self-contained and portable
-(Linux + macOS).
+CA Root, a Ledger application acting as an offline root CA: it signs X.509
+TBSCertificate structures with a device-derived non-exportable key. Keep it
+self-contained and portable (Linux + macOS).
 
 ## Layout
 
-- `src/` — application code: APDU handlers, UI, transaction parsing
+- `src/` — application code: APDU handlers, DER/TBS parsing, UI
 - `Makefile` — app build configuration; includes the SDK's makefiles
 - `mkconfig` — per-user local paths (gitignored; created from `mkconfig.example`)
 - `ledger_app.toml` — app manifest for Ledger tooling
-- `tests/` — ragger functional tests; `unit-tests/` — C unit tests (cmake + Unity)
+- `tests/` — speculos end-to-end test (pure speculos client, no ragger);
+  `unit-tests/` — C unit tests (cmake + Unity)
 - `icons/`, `glyphs/` — app icons and NBGL glyph sources
 
 ## Building
@@ -23,11 +24,12 @@ start from a clone of this repo; keep it self-contained and portable
   `/usr/bin/make` (3.81) breaks the SDK's install_params step.
 - `BOLOS_SDK` must point to a ledger-secure-sdk checkout at API level 27
   (tag `v27.1.x`), never `master`. Set it in `mkconfig` or the environment.
-- Default device is Nano S+ (`TARGET=nanos2`); override with
+- Plain `make` builds both curve variants (`make ed25519` / `make p256` for
+  one). Default device is Nano S+ (`TARGET=nanos2`); override with
   `TARGET=nanox|stax|flex|apex_p|apex_m`.
 - `DEBUG=1` enables `PRINTF` (visible in Speculos); `VERBOSE=1` prints commands.
-- Outputs: `build/<target>/bin/app.elf` (+ `.apdu`, `.hex`, `.sha256`),
-  with copies in `bin/` and `debug/` at the repo root.
+- Outputs: `build/<variant>/<target>/bin/app.elf` (+ `.apdu`, `.hex`,
+  `.sha256`), with copies in `bin/` and `debug/` at the repo root.
 
 ## Platform notes
 
@@ -40,11 +42,16 @@ start from a clone of this repo; keep it self-contained and portable
 
 ## Testing
 
-- Unit tests: cmake project in `unit-tests/`.
-- Functional tests: ragger + speculos, see `tests/README.md`.
+- Unit tests: cmake project in `unit-tests/` — configure
+  `cmake -S unit-tests -B unit-tests/build`, run `ctest --test-dir
+  unit-tests/build`.
+- End-to-end: one full issuance-flow test against speculos (`make test`,
+  both variants on CI); needs a speculos venv (`SPECULOS_VENV` in
+  `mkconfig`) and Linux for `qemu-arm-static`, see `tests/README.md`.
+- `.github/workflows/ci.yml` runs both suites on ubuntu-latest.
 
 ## Conventions
 
 - C style enforced by `.clang-format` — run it on touched files.
-- Protocol changes belong in `doc/` (APDU, transaction) and
+- Protocol changes belong in `doc/` (APDU, TBS) and
   `APP_SPECIFICATION.md` alongside the code.
