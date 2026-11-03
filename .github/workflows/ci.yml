@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+env:
+  SDK_REF: v27.1.3
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang lld llvm cmake
+
+      - name: Checkout SDK
+        run: |
+          git clone --depth 1 --branch "$SDK_REF" \
+            https://github.com/LedgerHQ/ledger-secure-sdk "$HOME/ledger-secure-sdk"
+
+      - name: Write mkconfig
+        run: |
+          llvm_bin="$(ls -d /usr/lib/llvm-*/bin | sort -V | tail -n 1)"
+          cat > mkconfig <<EOF
+          BOLOS_SDK ?= $HOME/ledger-secure-sdk
+          CLANGPATH ?= $llvm_bin/
+          PREPEND_PATH ?= $llvm_bin
+          EOF
+
+      - name: Configure and run unit tests
+        run: |
+          cmake -S unit-tests -B unit-tests/build
+          cmake --build unit-tests/build -j "$(nproc)"
+          ctest --test-dir unit-tests/build --output-on-failure
+
+  e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [ed25519, p256]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang lld llvm qemu-user-static
+
+      - name: Checkout SDK
+        run: |
+          git clone --depth 1 --branch "$SDK_REF" \
+            https://github.com/LedgerHQ/ledger-secure-sdk "$HOME/ledger-secure-sdk"
+
+      - name: Write mkconfig
+        run: |
+          llvm_bin="$(ls -d /usr/lib/llvm-*/bin | sort -V | tail -n 1)"
+          cat > mkconfig <<EOF
+          BOLOS_SDK ?= $HOME/ledger-secure-sdk
+          CLANGPATH ?= $llvm_bin/
+          PREPEND_PATH ?= $llvm_bin $HOME/venv-ledger/bin
+          SPECULOS_VENV ?= $HOME/venv-speculos
+          EOF
+
+      - name: Set up venvs
+        run: |
+          python -m venv "$HOME/venv-ledger"
+          "$HOME/venv-ledger/bin/pip" install ledgerblue
+          python -m venv "$HOME/venv-speculos"
+          "$HOME/venv-speculos/bin/pip" install speculos pycryptodomex pytest
+
+      - name: Build
+        run: make ${{ matrix.variant }}
+
+      - name: Run e2e test
+        run: make test CA_VARIANT=${{ matrix.variant }}
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-${{ matrix.variant }}
+          path: tests/screenshots/
+          if-no-files-found: ignore

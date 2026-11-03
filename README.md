@@ -89,15 +89,20 @@ developer mode instead.
 
 ```shell
 pip install speculos   # not part of the venv by default
-speculos --model nanosp build/nanos2/bin/app.elf
+speculos --model nanosp build/ed25519/nanos2/bin/app.elf
 ```
+
+Note that speculos needs `qemu-arm-static`, which only exists on Linux; on
+macOS use the speculos Docker image
+([docs](https://ledgerhq.github.io/speculos/user/macos.html)).
 
 ## Tests
 
-- Unit tests (C, cmake + Unity): `unit-tests/`
-- Functional tests (Python, ragger): `tests/standalone/`, `tests/swap/` —
-  install with `pip install -r tests/standalone/requirements.txt`, see
-  `tests/README.md`
+- Unit tests (C, cmake + Unity): `ctest --test-dir unit-tests/build` after
+  configuring `cmake -S unit-tests -B unit-tests/build`
+- End-to-end test against speculos (certificate issuance flow, both
+  variants): `make test`, see `tests/README.md` for the venv setup
+  (`SPECULOS_VENV` in `mkconfig`)
 
 ## Documentation
 

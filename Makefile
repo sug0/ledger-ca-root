@@ -201,8 +201,16 @@ ed25519:
 p256:
 	+$(MAKE) CA_VARIANT=p256
 
+# End-to-end tests against speculos, for the current variant. Needs a python
+# venv with speculos installed, see tests/README.md.
+SPECULOS_VENV ?= $(HOME)/.venvs/speculos
+PYTEST_ARGS ?=
+
+test: $(CA_VARIANT)
+	CA_VARIANT=$(CA_VARIANT) $(SPECULOS_VENV)/bin/python -m pytest tests/ -q $(PYTEST_ARGS)
+
 # Full cleanup across variants: the SDK's clean only removes $(BUILD_DIR)
 cleanall:
 	rm -fr build bin debug
 
-.PHONY: both ed25519 p256 cleanall
+.PHONY: both ed25519 p256 cleanall test

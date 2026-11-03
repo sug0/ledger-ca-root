@@ -65,10 +65,6 @@ ledger_unit_tests_build_app_sources_as_lib(
 #                        LedgerUT test suites                         #
 #######################################################################
 ledger_unit_tests_add_test(
-    NAME          test_template
-)
-
-ledger_unit_tests_add_test(
     NAME          test_der
     SOURCES       ${CMAKE_CURRENT_SOURCE_DIR}/../src/der.c
     INCLUDE_DIRS  ${UT_INCLUDE_DIRS_SDK} ${UT_INCLUDE_DIRS}

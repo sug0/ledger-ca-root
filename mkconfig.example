@@ -13,6 +13,12 @@ BOLOS_SDK ?= /path/to/ledger-secure-sdk
 # bin/ directory is put first on PATH so build steps pick up its tools.
 # LEDGER_VENV ?= /path/to/venv
 
+# Optional: Python virtualenv with the speculos emulator, used by the
+# end-to-end tests (make test); see tests/README.md for the setup:
+#   python3 -m venv ~/.venvs/speculos
+#   ~/.venvs/speculos/bin/pip install speculos pycryptodomex pytest
+# SPECULOS_VENV ?= ~/.venvs/speculos
+
 # Optional: directories to put first on PATH (space separated), and the LLVM
 # install used for clang. On macOS, Homebrew's LLVM, lld and GNU coreutils are
 # keg-only and must take precedence over the Apple system tools:
