@@ -1,0 +1,26 @@
+# Local build configuration for this machine.
+# Copy this file to `mkconfig` (gitignored) and adjust the paths; never commit it.
+
+# Required: path to a ledger-secure-sdk checkout (API level 27, tag v27.1.x)
+BOLOS_SDK ?= /path/to/ledger-secure-sdk
+
+# Optional: device to build for by default (nanox, nanos2, stax, flex, apex_p,
+# apex_m). The Makefile defaults to nanos2; the command line always wins
+# (make TARGET=stax).
+# TARGET ?= nanos2
+
+# Optional: Python virtualenv providing ledgerblue, ledgered and pillow; its
+# bin/ directory is put first on PATH so build steps pick up its tools.
+# LEDGER_VENV ?= /path/to/venv
+
+# Optional: directories to put first on PATH (space separated), and the LLVM
+# install used for clang. On macOS, Homebrew's LLVM, lld and GNU coreutils are
+# keg-only and must take precedence over the Apple system tools:
+# CLANGPATH ?= /opt/homebrew/opt/llvm/bin/
+# PREPEND_PATH ?= /opt/homebrew/opt/llvm/bin /opt/homebrew/opt/lld/bin /opt/homebrew/opt/coreutils/libexec/gnubin
+#
+# On Linux with distro packages, nothing extra is usually needed.
+
+# Optional: private key of your developer custom CA (64 hex chars), used by
+# `make load` to sideload onto a device with that CA installed.
+# SCP_PRIVKEY ?=

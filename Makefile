@@ -15,9 +15,41 @@
 #   limitations under the License.
 # ****************************************************************************
 
-ifeq ($(BOLOS_SDK),)
-$(error Environment variable BOLOS_SDK is not set)
+# Per-user local configuration: paths to the SDK, toolchain and Python venv.
+# Copy mkconfig.example to mkconfig and adjust; mkconfig is gitignored.
+-include mkconfig
+
+# GNU make >= 4.2 is required: older releases (macOS ships 3.81) never set
+# .SHELLSTATUS, which makes the SDK's install_params step fail with a bogus error
+make_version_ok := $(shell printf '%s\n' '$(MAKE_VERSION)' | awk -F. '{ print ($$1 > 4 || ($$1 == 4 && $$2 >= 2)) ? 1 : 0 }')
+ifneq ($(make_version_ok),1)
+$(error GNU make >= 4.2 required, found $(MAKE_VERSION); on macOS: brew install make, then run gmake)
 endif
+
+# Optional toolchain wiring from mkconfig: PREPEND_PATH entries (space
+# separated) go first on PATH, LEDGER_VENV points at a Python virtualenv with
+# ledgerblue/ledgered/pillow whose bin/ also goes first.
+empty :=
+space := $(empty) $(empty)
+ifneq ($(PREPEND_PATH),)
+export PATH := $(subst $(space),:,$(strip $(PREPEND_PATH))):$(PATH)
+endif
+ifneq ($(LEDGER_VENV),)
+ifneq ($(wildcard $(LEDGER_VENV)/bin),)
+export PATH := $(LEDGER_VENV)/bin:$(PATH)
+else
+$(warning LEDGER_VENV=$(LEDGER_VENV) has no bin/ directory, ignoring)
+endif
+endif
+
+# Path to a ledger-secure-sdk checkout (API level 27): set it in mkconfig or
+# in the environment
+ifeq ($(BOLOS_SDK),)
+$(error BOLOS_SDK is not set: copy mkconfig.example to mkconfig, or export BOLOS_SDK)
+endif
+
+# Device to build for by default; override on the command line (make TARGET=stax)
+TARGET ?= nanos2
 
 include $(BOLOS_SDK)/Makefile.target
 
@@ -154,3 +186,7 @@ ENABLE_STACK_PROTECTOR = 1
 #DISABLE_DEBUG_THROW = 1
 
 include $(BOLOS_SDK)/Makefile.standard_app
+
+# Recent clang lowers unaligned 4-byte accesses to __aeabi_* runtime calls
+# that the SDK's prebuilt libraries don't provide; the SDK's libgcc.a does
+LDLIBS += -lgcc
