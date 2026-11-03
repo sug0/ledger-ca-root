@@ -81,5 +81,5 @@ override with e.g. `PYTEST_ARGS="--approve-timeout 300"`).
 ## CI
 
 `.github/workflows/ci.yml` runs the speculos backend on GitHub Actions
-(`ubuntu-latest`, both variants, plus the unit tests). No configuration
+(`ubuntu-24.04`, both variants, plus the unit tests). No configuration
 needed for public repositories.

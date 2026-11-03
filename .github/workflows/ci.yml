@@ -10,7 +10,7 @@ env:
 
 jobs:
   unit-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -23,15 +23,8 @@ jobs:
         run: |
           git clone --depth 1 --branch "$SDK_REF" \
             https://github.com/LedgerHQ/ledger-secure-sdk "$HOME/ledger-secure-sdk"
-
-      - name: Write mkconfig
-        run: |
-          llvm_bin="$(ls -d /usr/lib/llvm-*/bin | sort -V | tail -n 1)"
-          cat > mkconfig <<EOF
-          BOLOS_SDK ?= $HOME/ledger-secure-sdk
-          CLANGPATH ?= $llvm_bin/
-          PREPEND_PATH ?= $llvm_bin
-          EOF
+          # cmake reads the SDK path from the environment; mkconfig only feeds make
+          echo "BOLOS_SDK=$HOME/ledger-secure-sdk" >> "$GITHUB_ENV"
 
       - name: Configure and run unit tests
         run: |
@@ -40,7 +33,7 @@ jobs:
           ctest --test-dir unit-tests/build --output-on-failure
 
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
