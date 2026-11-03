@@ -89,4 +89,19 @@ def test_intermediate_certificate_chain(client, sender, variant, backend, review
     # the certificate carries the intermediate public key, which is the next
     # link of the chain and belongs to the key pair generated above
     assert chain_pub == inter_pub
-    x509.key_roundtrip(inter_priv, chain_pub, variant)
+    # --- the application accepts a second signing flow in the same session
+    serial2 = b"\x00" + os.urandom(15)
+    tbs2 = x509.make_tbs(
+        variant,
+        serial2,
+        NOT_BEFORE,
+        NOT_AFTER,
+        ISSUER_CN,
+        SUBJECT_RDNS,
+        x509.make_spki(inter_pub, variant),
+    )
+    signature2 = sender.sign_tbs(tbs2, on_review=review_approve)
+    cert2 = x509.assemble_cert(tbs2, signature2, variant)
+    _, fields2, _ = x509.verify_chain(root_pub, cert2, variant)
+    assert fields2["serial"] == serial2
+    x509.key_roundtrip(inter_priv, inter_pub, variant)
