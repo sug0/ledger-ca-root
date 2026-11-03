@@ -25,7 +25,6 @@
 
 #include "get_version.h"
 #include "globals.h"
-#include "constants.h"
 #include "sw.h"
 #include "types.h"
 

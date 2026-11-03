@@ -23,7 +23,6 @@
 #include "ledger_assert.h"
 
 #include "dispatcher.h"
-#include "constants.h"
 #include "globals.h"
 #include "types.h"
 #include "sw.h"

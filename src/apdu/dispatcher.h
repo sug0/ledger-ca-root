@@ -4,6 +4,11 @@
 #include "types.h"
 
 /**
+ * Instruction class of the CA Root application.
+ */
+#define CLA 0xE0
+
+/**
  * Parameter 2 for last APDU to receive.
  */
 #define P2_LAST 0x00

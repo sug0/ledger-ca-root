@@ -15,7 +15,6 @@
 #include "Mockio.h"
 
 #include "get_app_name.h"
-#include "constants.h"  // APPNAME_LEN
 #include "sw.h"
 
 static uint8_t g_resp[MAX_APPNAME_LEN];

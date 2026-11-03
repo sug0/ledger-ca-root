@@ -15,7 +15,6 @@
 #include "Mockio.h"
 
 #include "get_version.h"
-#include "constants.h"  // APPVERSION_LEN, MAJOR/MINOR/PATCH_VERSION
 #include "sw.h"
 
 static uint8_t g_resp[16];

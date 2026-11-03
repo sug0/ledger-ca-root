@@ -4,8 +4,12 @@
 #include <stdint.h>  // uint*_t
 
 #include "ca_key.h"
-#include "constants.h"
 #include "tbs.h"
+
+/**
+ * Maximum TBSCertificate DER length accepted for signing (bytes).
+ */
+#define MAX_TBS_LEN 1024
 
 /**
  * Enumeration with expected INS of APDU commands.

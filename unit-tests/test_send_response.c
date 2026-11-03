@@ -19,7 +19,6 @@
 
 #include "globals.h"
 #include "send_response.h"
-#include "constants.h"
 #include "sw.h"
 #include "types.h"
 
@@ -63,21 +62,22 @@ void tearDown(void) {
 // =========================================================================
 
 void test_send_response_pubkey(void) {
+    uint8_t raw_public_key[CA_PUBLIC_KEY_LEN];
     for (size_t i = 0; i < CA_PUBLIC_KEY_LEN; i++) {
-        G_context.pk_info.raw_public_key[i] = (uint8_t) (i + 1);
+        raw_public_key[i] = (uint8_t) (i + 1);
     }
 
     io_send_response_buffers_AddCallback(send_cb);
     io_send_response_buffers_ExpectAnyArgsAndReturn(SEND_RET);
 
-    int ret = helper_send_response_pubkey();
+    int ret = helper_send_response_pubkey(raw_public_key);
 
     TEST_ASSERT_EQUAL(SEND_RET, ret);
     TEST_ASSERT_EQUAL(1, g_count);
     TEST_ASSERT_EQUAL_HEX16(SWO_SUCCESS, g_sw);
     TEST_ASSERT_EQUAL(1 + CA_PUBLIC_KEY_LEN, g_resp_size);
     TEST_ASSERT_EQUAL(CA_PUBLIC_KEY_LEN, g_resp[0]);
-    TEST_ASSERT_EQUAL_MEMORY(G_context.pk_info.raw_public_key, g_resp + 1, CA_PUBLIC_KEY_LEN);
+    TEST_ASSERT_EQUAL_MEMORY(raw_public_key, g_resp + 1, CA_PUBLIC_KEY_LEN);
 }
 
 // =========================================================================
