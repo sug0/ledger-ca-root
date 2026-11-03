@@ -81,14 +81,15 @@ Outputs (per variant):
 | `build/<variant>/<target>/bin/app.elf` | linked application (run this in Speculos) |
 | `build/<variant>/<target>/bin/app.apdu` | APDU stream to install the app |
 | `build/<variant>/<target>/bin/app.hex`, `app.sha256` | flashing / integrity |
-| `bin/`, `debug/` | copies of the above plus link map and disassembly |
+| `bin/`, `debug/` (repo root) | copies of the above for the variant built last, plus link map and disassembly |
 
 ## Load on a device
 
 Device must be connected, unlocked, on the dashboard:
 
 ```shell
-make load              # build, then sideload (current variant)
+make load              # build, then sideload (default variant: ed25519)
+make load CA_VARIANT=p256
 make load-offline
 make delete            # remove the app
 ```
@@ -112,10 +113,12 @@ macOS use the speculos Docker image
 - Unit tests (C, cmake + Unity): configure with
   `cmake -S unit-tests -B unit-tests/build`, run with
   `ctest --test-dir unit-tests/build`.
-- End-to-end test (certificate issuance flow, both variants): the backend
-  is always explicit — `make test BACKEND=speculos` against the emulator
-  (CI), or `make test BACKEND=device` against a real device over USB. See
-  `tests/README.md` for the venv setup (`SPECULOS_VENV` in `mkconfig`).
+- End-to-end test (certificate issuance flow): the backend is always
+  explicit — `make test BACKEND=speculos` against the emulator (CI), or
+  `make test BACKEND=device` against a real device over USB; one variant
+  per run, pick with `CA_VARIANT=p256`. The flow signs two certificates
+  per run, so a device run asks for two approvals. See `tests/README.md`
+  for the venv setup (`SPECULOS_VENV` in `mkconfig`).
 - CI (`.github/workflows/ci.yml`) runs both suites on GitHub-hosted runners.
 
 ## Documentation
@@ -128,3 +131,10 @@ doxygen .doxygen/Doxyfile
 ```
 
 Outputs HTML into `doc/html`.
+
+## License
+
+Apache License 2.0 — see [LICENSE.md](LICENSE.md). © 2026 Tiago Carvalho.
+Derived from Ledger's
+[app-boilerplate](https://github.com/LedgerHQ/app-boilerplate); portions
+remain © Ledger SAS.

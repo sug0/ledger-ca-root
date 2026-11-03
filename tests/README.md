@@ -15,7 +15,10 @@ emulator or a real Ledger device (the backend is selected explicitly, see
 5. verifies the chain: the signature over the exact TBS bytes must verify
    with the CA root public key read from the device (`GET_CA_PUBLIC_KEY`),
    and the public key carried in the certificate must belong to the
-   intermediate key pair generated in step 1.
+   intermediate key pair generated in step 1,
+6. repeats steps 2–5 with a second TBSCertificate (same subject, fresh
+   serial) to prove the application accepts consecutive signing flows in
+   one session.
 
 `tests/application_client/` contains the protocol client (APDU command
 sender) and the minimal X.509 tooling used by the test.
@@ -71,8 +74,9 @@ except the review approval, which you perform physically:
 Then `make test BACKEND=device`. The test prints the expected Subject,
 Serial and Validity for comparison with the device screen, and prompts you
 to **hold the right button to sign** (a long press on the left button
-rejects and fails the test). The exchange waits up to `--approve-timeout`
-seconds (default 120; override with e.g. `PYTEST_ARGS="--approve-timeout 300"`).
+rejects and fails the test). The flow signs twice, so expect two prompts.
+The exchange waits up to `--approve-timeout` seconds (default 120;
+override with e.g. `PYTEST_ARGS="--approve-timeout 300"`).
 
 ## CI
 
