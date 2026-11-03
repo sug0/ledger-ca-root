@@ -43,6 +43,12 @@ set(UT_COMPILE_DEFS
 # init ledger_unit_tests environment
 ledger_unit_tests_init()
 
+# NB: LedgerUT appends -lgcov for gcov, but clang has no libgcov (it is a GCC
+# runtime); --coverage links the profile runtime on both clang and gcc, so the
+# explicit -lgcov only breaks macOS builds
+string(REPLACE "-lgcov" "" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+string(REPLACE "-lgcov" "" CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}")
+
 # build all app sources but app_main.c (coverage baseline; not linked by tests)
 ledger_unit_tests_find_sources()
 
@@ -58,6 +64,20 @@ ledger_unit_tests_build_app_sources_as_lib(
 #######################################################################
 ledger_unit_tests_add_test(
     NAME          test_template
+)
+
+ledger_unit_tests_add_test(
+    NAME          test_der
+    SOURCES       ${CMAKE_CURRENT_SOURCE_DIR}/../src/der.c
+    INCLUDE_DIRS  ${UT_INCLUDE_DIRS_SDK} ${UT_INCLUDE_DIRS}
+    COMPILE_DEFS  ${UT_COMPILE_DEFS_SDK} ${UT_COMPILE_DEFS}
+)
+
+ledger_unit_tests_add_test(
+    NAME          test_tbs
+    SOURCES       ${CMAKE_CURRENT_SOURCE_DIR}/../src/tbs.c ${CMAKE_CURRENT_SOURCE_DIR}/../src/der.c
+    INCLUDE_DIRS  ${UT_INCLUDE_DIRS_SDK} ${UT_INCLUDE_DIRS}
+    COMPILE_DEFS  ${UT_COMPILE_DEFS_SDK} ${UT_COMPILE_DEFS}
 )
 
 ledger_unit_tests_add_test(
