@@ -9,8 +9,8 @@ emulator or a real Ledger device (the backend is selected explicitly, see
 2. builds the TBSCertificate of the intermediate certificate (subject,
    serial, validity, and the real intermediate public key in the SPKI),
 3. sends the TBS DER to the application in chunked APDUs and approves the
-   on-device review (speculos: automated via the REST API; device: you hold
-   to sign when prompted),
+   on-device review (speculos: automated via the REST API; device: you press
+   both buttons to confirm when prompted),
 4. receives the signature, assembles the intermediate certificate,
 5. verifies the chain: the signature over the exact TBS bytes must verify
    with the CA root public key read from the device (`GET_CA_PUBLIC_KEY`),
@@ -73,8 +73,9 @@ except the review approval, which you perform physically:
 
 Then `make e2e-test BACKEND=device`. The test prints the expected Subject,
 Serial and Validity for comparison with the device screen, and prompts you
-to **hold the right button to sign** (a long press on the left button
-rejects and fails the test). The flow signs twice, so expect two prompts.
+to **press both buttons on the "Sign message" page to sign** (the "Reject
+message" page rejects and fails the test). The flow signs twice, so expect
+two prompts.
 The exchange waits up to `--approve-timeout` seconds (default 120;
 override with e.g. `PYTEST_ARGS="--approve-timeout 300"`).
 

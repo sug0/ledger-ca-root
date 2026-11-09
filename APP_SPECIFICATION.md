@@ -141,9 +141,9 @@ After the last chunk the application parses the structure (see
 | Serial  | serialNumber content as `0x`-prefixed hex          |
 | Valid   | `notBefore - notAfter` as `YYYY-MM-DD` (RFC 5280), raw content if malformed |
 
-Approving (hold to sign) produces the signature; rejecting returns
-`SWO_CONDITIONS_NOT_SATISFIED`. A CommonName longer than 62 bytes is a hard
-reject rather than a truncated display.
+Approving the review (both buttons on the "Sign message" page) produces the
+signature; rejecting returns `SWO_CONDITIONS_NOT_SATISFIED`. A CommonName
+longer than 62 bytes is a hard reject rather than a truncated display.
 
 ## Status Words
 
