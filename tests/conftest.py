@@ -31,7 +31,6 @@ DEVICE_TARGETS = {  # speculos model -> build tree directory
 
 REVIEW_TIMEOUT_S = 20
 MAX_REVIEW_CLICKS = 6  # upper bound of review pages for the 3 pairs
-HOLD_TIME_S = 1.2  # NBGL "hold to sign" duration
 
 
 def console(message):
@@ -116,16 +115,17 @@ def sender(client):
 def review_approve(client, backend):
     """Approve the NBGL certificate review.
 
-    speculos: navigate to the hold page and hold the right button via the
-    REST API (screens are dumped to tests/screenshots/). device: the user
-    reviews and approves; the blocking SIGN_TBS exchange continues when
-    they hold to sign.
+    speculos: navigate to the "Sign message" page and confirm with a
+    both-button press via the REST API (screens are dumped to
+    tests/screenshots/). device: the user reviews and approves; the
+    blocking SIGN_TBS exchange continues when they press both buttons on
+    the "Sign message" page.
     """
     if backend == "device":
 
         def approve():
-            console(">>> On the device: review the certificate, then HOLD the right button to sign.")
-            console(">>> (a long press on the left button rejects, failing the test)")
+            console(">>> On the device: review the certificate, then press BOTH buttons on the 'Sign message' page to sign.")
+            console(">>> (the 'Reject message' page rejects, failing the test)")
 
         return approve
 
@@ -135,30 +135,30 @@ def review_approve(client, backend):
 
         deadline = time.monotonic() + REVIEW_TIMEOUT_S
         clicks = 0
-        on_hold_page = False
+        on_accept_page = False
         while time.monotonic() < deadline and clicks < MAX_REVIEW_CLICKS:
             texts = _screen_texts(client)
-            if any("hold to sign" in text.lower() for text in texts):
-                on_hold_page = True
+            if any("sign message" in text.lower() for text in texts):
+                on_accept_page = True
                 break
             client.press_and_release("right")
             clicks += 1
             time.sleep(0.3)
-        (SCREENSHOT_DIR / "review-hold.png").write_bytes(client.get_screenshot())
-        if not on_hold_page:
-            console(">>> speculos: 'hold to sign' not reached; holding anyway")
+        (SCREENSHOT_DIR / "review-approve.png").write_bytes(client.get_screenshot())
 
-        # hold the right button to sign; the APDU response is sent on release
-        _press(client, "right", "press")
-        time.sleep(HOLD_TIME_S)
-        _press(client, "right", "release")
+        # the Nano S+ review confirms with a both-button press on the
+        # "Sign message" page (BUTTON_BOTH_PRESSED -> onReviewAccept);
+        # a held button generates no event the app consumes
+        if not on_accept_page:
+            # screen text never matched: right saturates on the last
+            # ("Reject message") page, so step back to the accept page
+            console(">>> speculos: 'Sign message' page not seen; stepping back and confirming anyway")
+            client.press_and_release("left")
+            time.sleep(0.3)
+        client.press_and_release("both")
         time.sleep(0.3)
 
     return approve
-
-
-def _press(client, button, action):
-    client.session.post(f"{client.api_url}/button/{button}", json={"action": action})
 
 
 def _screen_texts(client):
