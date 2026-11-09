@@ -110,12 +110,11 @@ macOS use the speculos Docker image
 
 ## Tests
 
-- Unit tests (C, cmake + Unity): configure with
-  `cmake -S unit-tests -B unit-tests/build`, run with
-  `ctest --test-dir unit-tests/build`.
+- Unit tests (C, cmake + Unity): `make unit-test` (configure, build,
+  `ctest` in one go).
 - End-to-end test (certificate issuance flow): the backend is always
-  explicit — `make test BACKEND=speculos` against the emulator (CI), or
-  `make test BACKEND=device` against a real device over USB; one variant
+  explicit — `make e2e-test BACKEND=speculos` against the emulator (CI), or
+  `make e2e-test BACKEND=device` against a real device over USB; one variant
   per run, pick with `CA_VARIANT=p256`. The flow signs two certificates
   per run, so a device run asks for two approvals. See `tests/README.md`
   for the venv setup (`SPECULOS_VENV` in `mkconfig`).

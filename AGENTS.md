@@ -42,10 +42,9 @@ self-contained and portable (Linux + macOS).
 
 ## Testing
 
-- Unit tests: cmake project in `unit-tests/` — configure
-  `cmake -S unit-tests -B unit-tests/build`, run `ctest --test-dir
-  unit-tests/build`.
-- End-to-end: one full issuance-flow test (`make test BACKEND=speculos`
+- Unit tests: `make unit-test` (wraps the cmake project in `unit-tests/`
+  — configure, build, `ctest`).
+- End-to-end: one full issuance-flow test (`make e2e-test BACKEND=speculos`
   against the emulator — the backend is always explicit — or `BACKEND=device`
   against a real device over USB); both variants on CI; needs a test venv
   (`SPECULOS_VENV` in `mkconfig`) and Linux for `qemu-arm-static`, see
@@ -54,6 +53,7 @@ self-contained and portable (Linux + macOS).
 
 ## Conventions
 
-- C style enforced by `.clang-format` — run it on touched files.
+- C style enforced by `.clang-format` — run `make fmt` (or clang-format -i
+  on the files you touched).
 - Protocol changes belong in `doc/` (APDU, TBS) and
   `APP_SPECIFICATION.md` alongside the code.

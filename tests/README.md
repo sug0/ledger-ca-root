@@ -47,11 +47,11 @@ official speculos Docker image; see the
 The backend must be given explicitly; the suite refuses to guess:
 
 ```sh
-make test BACKEND=speculos CA_VARIANT=ed25519   # speculos emulator (CI)
-make test BACKEND=device  CA_VARIANT=ed25519    # real device over USB HID
+make e2e-test BACKEND=speculos CA_VARIANT=ed25519   # speculos emulator (CI)
+make e2e-test BACKEND=device  CA_VARIANT=ed25519    # real device over USB HID
 ```
 
-`make test` builds the variant first, then runs pytest. The test device
+`make e2e-test` builds the variant first, then runs pytest. The test device
 defaults to Nano S+ (`--model nanosp`); the speculos seed is fixed
 (`tests/conftest.py`) so the expected CA root key is derived deterministically
 and cross-checked in the test (ed25519 variant, SLIP-0010 at m/8888'/0').
@@ -71,7 +71,7 @@ except the review approval, which you perform physically:
 - open the application on the device and close Ledger Live (it must not hold
   the USB HID interface)
 
-Then `make test BACKEND=device`. The test prints the expected Subject,
+Then `make e2e-test BACKEND=device`. The test prints the expected Subject,
 Serial and Validity for comparison with the device screen, and prompts you
 to **hold the right button to sign** (a long press on the left button
 rejects and fails the test). The flow signs twice, so expect two prompts.
