@@ -205,6 +205,17 @@ ed25519:
 p256:
 	+$(MAKE) CA_VARIANT=p256
 
+# Host unit tests (cmake + Unity): configure, build and run ctest. JOBS
+# defaults to the machine's processor count; the SDK path is passed on
+# explicitly because mkconfig sets it as a make variable, not in the
+# environment cmake would inherit.
+JOBS ?= $(shell getconf _NPROCESSORS_ONLN 2>/dev/null || echo 2)
+
+unit-test:
+	env BOLOS_SDK="$(BOLOS_SDK)" cmake -S unit-tests -B unit-tests/build
+	cmake --build unit-tests/build -j $(JOBS)
+	ctest --test-dir unit-tests/build --output-on-failure
+
 # End-to-end tests for the current variant. The backend (speculos emulator
 # or a real device over USB) must be given explicitly; both need a python
 # venv, see tests/README.md.
@@ -219,4 +230,4 @@ test: $(CA_VARIANT)
 cleanall:
 	rm -fr build bin debug
 
-.PHONY: both ed25519 p256 cleanall test
+.PHONY: both ed25519 p256 cleanall test unit-test
