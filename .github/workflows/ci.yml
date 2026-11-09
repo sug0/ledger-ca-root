@@ -26,11 +26,8 @@ jobs:
           # cmake reads the SDK path from the environment; mkconfig only feeds make
           echo "BOLOS_SDK=$HOME/ledger-secure-sdk" >> "$GITHUB_ENV"
 
-      - name: Configure and run unit tests
-        run: |
-          cmake -S unit-tests -B unit-tests/build
-          cmake --build unit-tests/build -j "$(nproc)"
-          ctest --test-dir unit-tests/build --output-on-failure
+      - name: Run unit tests
+        run: make unit-test
 
   e2e:
     runs-on: ubuntu-24.04
@@ -82,7 +79,7 @@ jobs:
         # pytest-timeout bounds a stuck approval so it fails with a traceback
         # (and uploads screenshots) instead of stalling until the emulator's
         # APDU long-poll drops the connection
-        run: make test SYSROOT=/usr/lib/picolibc/arm-none-eabi CA_VARIANT=${{ matrix.variant }} BACKEND=speculos PYTEST_ARGS="--timeout=120"
+        run: make e2e-test SYSROOT=/usr/lib/picolibc/arm-none-eabi CA_VARIANT=${{ matrix.variant }} BACKEND=speculos PYTEST_ARGS="--timeout=120"
 
       - name: Upload screenshots on failure
         if: failure()
