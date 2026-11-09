@@ -226,8 +226,13 @@ test: $(CA_VARIANT)
 	@test -n "$(BACKEND)" || { echo "usage: make test BACKEND=speculos|device [CA_VARIANT=ed25519|p256]"; exit 2; }
 	CA_VARIANT=$(CA_VARIANT) $(SPECULOS_VENV)/bin/python -m pytest tests/ -q --backend $(BACKEND) $(PYTEST_ARGS)
 
+# Reformat all app and unit-test C sources with the repo's .clang-format.
+# The unit-test build tree is pruned: generated mock headers live there.
+fmt:
+	clang-format -i $$(find src unit-tests -name build -prune -o \( -name '*.c' -o -name '*.h' \) -print)
+
 # Full cleanup across variants: the SDK's clean only removes $(BUILD_DIR)
 cleanall:
 	rm -fr build bin debug
 
-.PHONY: both ed25519 p256 cleanall test unit-test
+.PHONY: both ed25519 p256 cleanall test unit-test fmt
