@@ -216,14 +216,14 @@ unit-test:
 	cmake --build unit-tests/build -j $(JOBS)
 	ctest --test-dir unit-tests/build --output-on-failure
 
-# End-to-end tests for the current variant. The backend (speculos emulator
+# End-to-end test for the current variant. The backend (speculos emulator
 # or a real device over USB) must be given explicitly; both need a python
 # venv, see tests/README.md.
 SPECULOS_VENV ?= $(HOME)/.venvs/speculos
 PYTEST_ARGS ?=
 
-test: $(CA_VARIANT)
-	@test -n "$(BACKEND)" || { echo "usage: make test BACKEND=speculos|device [CA_VARIANT=ed25519|p256]"; exit 2; }
+e2e-test: $(CA_VARIANT)
+	@test -n "$(BACKEND)" || { echo "usage: make e2e-test BACKEND=speculos|device [CA_VARIANT=ed25519|p256]"; exit 2; }
 	CA_VARIANT=$(CA_VARIANT) $(SPECULOS_VENV)/bin/python -m pytest tests/ -q --backend $(BACKEND) $(PYTEST_ARGS)
 
 # Reformat all app and unit-test C sources with the repo's .clang-format.
@@ -235,4 +235,4 @@ fmt:
 cleanall:
 	rm -fr build bin debug
 
-.PHONY: both ed25519 p256 cleanall test unit-test fmt
+.PHONY: both ed25519 p256 cleanall unit-test e2e-test fmt
